@@ -39,9 +39,8 @@ def test_learn(client, app):
     assert r.status_code == 201
 
     with app.app_context():
-        shelf = db.get_shelf()
-        metric = shelf['metric']
-        assert metric.n == 1
+        assert db.get_shelf()['metric'].n == 1
+        assert len(db.get_influx().query('SELECT * FROM scores;')) == 1
 
 
 def test_learn_with_id(client, app):
@@ -60,6 +59,5 @@ def test_learn_with_id(client, app):
     assert r.status_code == 201
 
     with app.app_context():
-        shelf = db.get_shelf()
-        metric = shelf['metric']
-        assert metric.n == 1
+        assert db.get_shelf()['metric'].n == 1
+        assert len(db.get_influx().query('SELECT * FROM scores;')) == 1

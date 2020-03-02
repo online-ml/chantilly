@@ -11,7 +11,11 @@ import influxdb
 def get_influx():
     if 'influx' not in g:
         g.influx = influxdb.InfluxDBClient(
-            'localhost', 8086, 'root', 'root', 'example'
+            host='localhost',
+            port=8086,
+            username='root',
+            password='root',
+            database=current_app.config['INFLUX_DB']
         )
     return g.influx
 
@@ -25,7 +29,7 @@ def close_influx(e=None):
 
 def init_influx():
     influx = get_influx()
-    influx.create_database('example')
+    influx.create_database(current_app.config['INFLUX_DB'])
 
 
 def get_shelf():

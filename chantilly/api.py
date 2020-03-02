@@ -61,6 +61,15 @@ def learn():
     metric.update(payload['target'], prediction)
     shelf['metric'] = metric
 
+    # Store the current metric value
+    influx = db.get_influx()
+    ok = influx.write_points([{
+        'measurement': 'scores',
+        'fields': {
+            metric.__class__.__name__: metric.get()
+        }
+    }])
+
     # Update the model
     model.fit_one(features, payload['target'])
     shelf['model'] = model
