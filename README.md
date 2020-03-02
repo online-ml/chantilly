@@ -1,5 +1,5 @@
 <p align="center">
-  <img height="200px" src="https://docs.google.com/drawings/d/133Uqu7unqn58GyWfbGK3Fadev2sUMvSgUQD9jsvIgSI/edit?usp=sharing" alt="chantilly_logo">
+  <img height="200px" src="https://docs.google.com/drawings/d/e/2PACX-1vQ0AFza3nHkrhe0Fam_NAZF5wgGzskKTV5To4cfHAmrCuhr3cZnJiZ3pD1OfXVP72A435b5IlsduoQC/pub?w=580&h=259" alt="chantilly_logo">
 </p>
 
 <p align="center">
