@@ -10,4 +10,9 @@ setup(
         'flask==1.1.1',
         'influxdb==5.2.3'
     ],
+    entry_points={
+        'console_scripts': [
+            'chantilly=app:cli'
+        ],
+    },
 )

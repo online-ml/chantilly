@@ -1,11 +1,13 @@
 import os
 
+import click
 from flask import Flask
+from flask.cli import FlaskGroup
 
 
 def create_app(test_config=None):
     # create and configure the app
-    app = Flask(__name__, instance_relative_config=True)
+    app = Flask('chantilly', instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
         INFLUX_DB='chantilly',
@@ -38,3 +40,8 @@ def create_app(test_config=None):
     app.register_blueprint(api.bp)
 
     return app
+
+
+@click.group(cls=FlaskGroup, create_app=create_app)
+def cli():
+    """Management script for the chantilly application."""

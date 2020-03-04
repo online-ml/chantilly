@@ -27,6 +27,5 @@ docker run -p 3000:3000 --env GF_SECURITY_ADMIN_USER=admin --env GF_SECURITY_ADM
 
 ```sh
 pip install git+https://github.com/creme-ml/chantilly
-env FLASK_APP=chantilly
-flask run
+chantilly run
 ```
