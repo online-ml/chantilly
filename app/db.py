@@ -1,3 +1,4 @@
+import os
 import pickle
 import shelve
 
@@ -8,7 +9,7 @@ from flask.cli import with_appcontext
 import influxdb
 
 
-def get_influx():
+def get_influx() -> influxdb.InfluxDBClient:
     if 'influx' not in g:
         g.influx = influxdb.InfluxDBClient(
             host='localhost',
@@ -32,7 +33,7 @@ def init_influx():
     influx.create_database(current_app.config['INFLUX_DB'])
 
 
-def get_shelf():
+def get_shelf() -> shelve.Shelf:
     if 'shelf' not in g:
         g.shelf = shelve.open(current_app.config['SHELVE_PATH'])
     return g.shelf
@@ -45,18 +46,32 @@ def close_shelf(e=None):
         shelf.close()
 
 
+def init_db():
+
+    if not current_app.config['API_ONLY']:
+        influx = get_influx()
+        influx.create_database(current_app.config['INFLUX_DB'])
+
+
+def drop_db():
+
+    os.remove(f"{current_app.config['SHELVE_PATH']}.db")
+
+    if not current_app.config['API_ONLY']:
+        influx = get_influx()
+        influx.create_database(current_app.config['INFLUX_DB'])
+
+
 @click.command('init-db')
 @with_appcontext
 def init_db_command():
-    """Clear the existing data and create new tables."""
-    init_influx()
-    click.echo('Initialized the InfluxDB instance.')
+    init_db()
 
 
-@click.command('init-model')
+@click.command('add-model')
 @click.argument('path')
 @with_appcontext
-def init_model_command(path):
+def add_model_command(path):
 
     shelf = get_shelf()
     with open(path, 'rb') as f:
@@ -71,4 +86,4 @@ def init_app(app):
     app.teardown_appcontext(close_influx)
     app.teardown_appcontext(close_shelf)
     app.cli.add_command(init_db_command)
-    app.cli.add_command(init_model_command)
+    app.cli.add_command(add_model_command)

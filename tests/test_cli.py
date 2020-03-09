@@ -4,7 +4,7 @@ import os
 from creme import linear_model
 from flask import g
 
-from chantilly import db
+from app import db
 
 
 def test_add_model(app):
@@ -17,7 +17,7 @@ def test_add_model(app):
         pickle.dump(model, f)
 
     # Add the model to the shelf through the CLI
-    result = runner.invoke(db.init_model_command, ['tmp.pkl'])
+    result = runner.invoke(db.add_model_command, ['tmp.pkl'])
     assert result.exit_code == 0
 
     # Check that the model has been added to the shelf

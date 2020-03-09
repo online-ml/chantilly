@@ -62,13 +62,14 @@ def learn():
     shelf['metric'] = metric
 
     # Store the current metric value
-    influx = db.get_influx()
-    ok = influx.write_points([{
-        'measurement': 'scores',
-        'fields': {
-            metric.__class__.__name__: metric.get()
-        }
-    }])
+    if not flask.current_app.config['API_ONLY']:
+        influx = db.get_influx()
+        ok = influx.write_points([{
+            'measurement': 'scores',
+            'fields': {
+                metric.__class__.__name__: metric.get()
+            }
+        }])
 
     # Update the model
     model.fit_one(features, payload['target'])

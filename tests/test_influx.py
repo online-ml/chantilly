@@ -1,6 +1,9 @@
-from chantilly import db
+from app import db
 
 def test_write_read(app):
+
+    if app.config['API_ONLY']:
+        return
 
     with app.app_context():
         influx = db.get_influx()

@@ -1,6 +1,6 @@
 import json
 
-from chantilly import db
+from app import db
 
 
 def test_predict(client, app):
@@ -40,7 +40,8 @@ def test_learn(client, app):
 
     with app.app_context():
         assert db.get_shelf()['metric'].n == 1
-        assert len(db.get_influx().query('SELECT * FROM scores;')) == 1
+        if not app.config['API_ONLY']:
+            assert len(db.get_influx().query('SELECT * FROM scores;')) == 1
 
 
 def test_learn_with_id(client, app):
@@ -60,4 +61,5 @@ def test_learn_with_id(client, app):
 
     with app.app_context():
         assert db.get_shelf()['metric'].n == 1
-        assert len(db.get_influx().query('SELECT * FROM scores;')) == 1
+        if not app.config['API_ONLY']:
+            assert len(db.get_influx().query('SELECT * FROM scores;')) == 1
