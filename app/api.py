@@ -1,3 +1,4 @@
+import creme.base
 import flask
 
 from . import db
@@ -14,7 +15,10 @@ def predict():
     # Load the model
     shelf = db.get_shelf()
     model = shelf['model']
-    pred = model.predict_one(payload['features'])
+    if isinstance(model, creme.base.Classifier):
+        pred = model.predict_proba_one(payload['features'])
+    else:
+        pred = model.predict_one(payload['features'])
 
     # If an ID is provided, then we store the features in order to be able to use them for learning
     # further down the line.
@@ -39,9 +43,9 @@ def learn():
     features = None
     prediction = None
     if 'id' in payload:
-        e = shelf.get('#%s' % payload['id'], {})
-        features = e.get('features')
-        prediction = e.get('prediction')
+        memory = shelf.get('#%s' % payload['id'], {})
+        features = memory.get('features')
+        prediction = memory.get('prediction')
 
     # If features are provided in the request, then they have precedence
     if 'features' in payload:
@@ -57,17 +61,19 @@ def learn():
         prediction = model.predict_proba_one(features)
 
     # Update the metric
-    metric = shelf['metric']
-    metric.update(payload['target'], prediction)
-    shelf['metric'] = metric
+    metrics = shelf['metrics']
+    for metric in metrics:
+        metric.update(payload['target'], prediction)
+    shelf['metrics'] = metrics
 
     # Store the current metric value
     if not flask.current_app.config['API_ONLY']:
         influx = db.get_influx()
         ok = influx.write_points([{
-            'measurement': 'scores',
+            'measurement': 'metrics',
             'fields': {
                 metric.__class__.__name__: metric.get()
+                for metric in metrics
             }
         }])
 
@@ -77,3 +83,14 @@ def learn():
 
     return {}, 201
 
+
+@bp.route('/metrics', methods=['GET'])
+def metrics():
+
+    shelf = db.get_shelf()
+    metrics = shelf['metrics']
+
+    return {
+        metric.__class__.__name__: metric.get()
+        for metric in metrics
+    }

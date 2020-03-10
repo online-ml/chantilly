@@ -3,7 +3,9 @@ import pickle
 import shelve
 
 import click
-from creme import metrics
+import creme.base
+import creme.metrics
+import creme.utils
 from flask import current_app, g
 from flask.cli import with_appcontext
 import influxdb
@@ -68,22 +70,29 @@ def init_db_command():
     init_db()
 
 
-@click.command('add-model')
+def set_model(model: creme.base.Estimator):
+    shelf = get_shelf()
+    shelf['model'] = model
+    if isinstance(creme.utils.estimator_checks.guess_model(model), creme.base.Classifier):
+        shelf['metrics'] = [creme.metrics.LogLoss()]
+    else:
+        shelf['metrics'] = [creme.metrics.MSE()]
+
+
+@click.command('set-model')
 @click.argument('path')
 @with_appcontext
-def add_model_command(path):
+def set_model_command(path):
 
-    shelf = get_shelf()
     with open(path, 'rb') as f:
         model = pickle.load(f)
-        shelf['model'] = model
-        shelf['metric'] = metrics.LogLoss()
+        set_model(model)
 
-    click.echo('Added the model to the shelf.')
+    click.echo('Model has been set.')
 
 
 def init_app(app):
     app.teardown_appcontext(close_influx)
     app.teardown_appcontext(close_shelf)
     app.cli.add_command(init_db_command)
-    app.cli.add_command(add_model_command)
+    app.cli.add_command(set_model_command)

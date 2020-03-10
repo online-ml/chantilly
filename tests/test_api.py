@@ -39,7 +39,8 @@ def test_learn(client, app):
     assert r.status_code == 201
 
     with app.app_context():
-        assert db.get_shelf()['metric'].n == 1
+        for metric in db.get_shelf()['metrics']:
+            assert metric.n == 1
         if not app.config['API_ONLY']:
             assert len(db.get_influx().query('SELECT * FROM scores;')) == 1
 
@@ -60,6 +61,7 @@ def test_learn_with_id(client, app):
     assert r.status_code == 201
 
     with app.app_context():
-        assert db.get_shelf()['metric'].n == 1
+        for metric in db.get_shelf()['metrics']:
+            assert metric.n == 1
         if not app.config['API_ONLY']:
             assert len(db.get_influx().query('SELECT * FROM scores;')) == 1

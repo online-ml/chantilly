@@ -23,11 +23,7 @@ def app():
 
     with app.app_context():
         db.init_db()
-
-        #
-        shelf = db.get_shelf()
-        shelf['model'] = preprocessing.StandardScaler() | linear_model.LogisticRegression()
-        shelf['metric'] = metrics.LogLoss()
+        db.set_model(preprocessing.StandardScaler() | linear_model.LogisticRegression())
 
     yield app
 
