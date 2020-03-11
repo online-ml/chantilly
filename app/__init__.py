@@ -4,6 +4,9 @@ import click
 from flask import Flask
 from flask.cli import FlaskGroup
 
+from . import db
+from . import cli
+
 
 def create_app(test_config=None):
 
@@ -35,9 +38,10 @@ def create_app(test_config=None):
     def hello():
         return 'Hello, World!'
 
-    # Register database
-    from . import db
-    db.init_app(app)
+    app.teardown_appcontext(db.close_influx)
+    app.teardown_appcontext(db.close_shelf)
+    app.cli.add_command(cli.init_db_command)
+    app.cli.add_command(cli.set_model_command)
 
     # Register routes
     from . import api
@@ -47,5 +51,5 @@ def create_app(test_config=None):
 
 
 @click.group(cls=FlaskGroup, create_app=create_app)
-def cli():
+def cli_hook():
     """Management script for the chantilly application."""

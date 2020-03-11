@@ -1,5 +1,6 @@
 import creme.base
 import flask
+import pickle
 
 from . import db
 
@@ -82,6 +83,18 @@ def learn():
     shelf['model'] = model
 
     return {}, 201
+
+
+@bp.route('/model', methods=['GET', 'POST'])
+def set_model():
+    if flask.request.method == 'POST':
+        model = pickle.loads(flask.request.get_data())
+        db.set_model(model)
+        return {}, 201
+
+    shelf = db.get_shelf()
+    model = shelf['model']
+    return pickle.dumps(model)
 
 
 @bp.route('/metrics', methods=['GET'])

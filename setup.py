@@ -12,7 +12,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'chantilly=app:cli'
+            'chantilly=app:cli_hook'
         ],
     },
 )
