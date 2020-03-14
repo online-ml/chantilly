@@ -1,9 +1,12 @@
+import pytest
+
 from app import db
+
 
 def test_write_read(app):
 
     if app.config['API_ONLY']:
-        return
+        pytest.skip('Running in API only mode')
 
     with app.app_context():
         influx = db.get_influx()

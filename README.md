@@ -29,3 +29,13 @@ docker run -p 3000:3000 --env GF_SECURITY_ADMIN_USER=admin --env GF_SECURITY_ADM
 pip install git+https://github.com/creme-ml/chantilly
 chantilly run
 ```
+
+## Roadmap
+
+- **HTTP long polling**: clients can interact with `creme` over a straightforward HTTP protocol. Therefore the speed bottleneck comes from the web requests, not from the machine learning. We would like to provide a way to interact with `chantilly` via long-polling. This means that a single connection can be used to process multiple predictions and model updates, which reduces the overall latency.
+
+
+## Related projects
+
+- [Cortex](https://github.com/cortexlabs/cortex)
+- [Clipper](https://github.com/ucbrise/clipper)

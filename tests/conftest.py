@@ -23,7 +23,7 @@ def app():
 
     with app.app_context():
         db.init_db()
-        db.set_model(preprocessing.StandardScaler() | linear_model.LogisticRegression())
+        #db.set_model(preprocessing.StandardScaler() | linear_model.LogisticRegression(), True)
 
     yield app
 

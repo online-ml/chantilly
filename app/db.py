@@ -55,16 +55,23 @@ def init_db():
 
 def drop_db():
 
-    os.remove(f"{current_app.config['SHELVE_PATH']}.db")
+    try:
+        os.remove(f"{current_app.config['SHELVE_PATH']}.db")
+    except FileNotFoundError:
+        pass
 
     if not current_app.config['API_ONLY']:
         influx = get_influx()
         influx.create_database(current_app.config['INFLUX_DB'])
 
 
-def set_model(model: creme.base.Estimator):
+def set_model(model: creme.base.Estimator, reset_metrics: bool):
     shelf = get_shelf()
     shelf['model'] = model
+
+    if not reset_metrics and 'metrics' in shelf:
+        return
+
     if isinstance(creme.utils.estimator_checks.guess_model(model), creme.base.Classifier):
         shelf['metrics'] = [creme.metrics.LogLoss()]
     else:
