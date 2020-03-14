@@ -1,33 +1,76 @@
+import datetime as dt
+import json
 import time
 
+from creme import datasets
+from creme import metrics
 from creme import stream
+import requests
 
 
-TRIPS = [
-    ({'time': 0}, 2),
-    ({'time': 1}, 5),
-    ({'time': 2}, 2),
-    ({'time': 3}, 1),
-    ({'time': 4}, 2),
-]
+SPEED_UP = 1  # Increase this to make the simulation go faster
+
+
+def sleep(td: dt.timedelta):
+    if td.seconds >= 0:
+        time.sleep(td.seconds / SPEED_UP)
+
+
+class colors:
+    GREEN = '\033[92m'
+    BLUE = '\033[94m'
+    ENDC = '\033[0m'
 
 
 if __name__ == '__main__':
 
     # Use the first trip's departure time as a reference time
-    now = TRIPS[0][0]['time']
+    taxis = datasets.Taxis()
+    now = next(iter(taxis))[0]['pickup_datetime']
+    mae = metrics.MAE()
+    host = 'http://127.0.0.1:5000'
+    predictions = {}
 
-    for i, trip, delay in stream.simulate_qa(TRIPS, moment='time', delay=lambda _, delay: delay):
+    for trip_no, trip, duration in stream.simulate_qa(
+        taxis,
+        moment='pickup_datetime',
+        delay=lambda _, duration: dt.timedelta(seconds=duration)
+    ):
 
-        # Question
-        if delay is None:
-            time.sleep(trip['time'] - now)
-            now = trip['time']
-            print('PREDICT', now)
+        trip_no = str(trip_no).zfill(len(str(taxis.n_samples)))
+
+        # Taxi trip starts
+
+        if duration is None:
+
+            # Wait
+            sleep(trip['pickup_datetime'] - now)
+            now = trip['pickup_datetime']
+
+            # Ask chantilly to make a prediction
+            r = requests.post(host + '/api/predict', json={
+                'id': trip_no,
+                'features': {**trip, 'pickup_datetime': trip['pickup_datetime'].isoformat()}
+            })
+
+            # Store the prediction
+            predictions[trip_no] = r.json()['prediction']
+
+            print(colors.GREEN + f'#{trip_no} departs at {now}' + colors.ENDC)
             continue
 
-        # Answer
-        arrival_time = trip['time'] + delay
-        time.sleep(arrival_time - now)
+        # Taxi trip ends
+
+        # Wait
+        arrival_time = trip['pickup_datetime'] + dt.timedelta(seconds=duration)
+        sleep(arrival_time - now)
         now = arrival_time
-        print('LEARN', now)
+
+        # Ask chantilly to update the model
+        requests.post(host + '/api/learn', json={'id': trip_no})
+
+        # Update the metric
+        mae.update(y_true=duration, y_pred=predictions.pop(trip_no))
+
+        msg = f'#{trip_no} arrives at {now} - average error: {dt.timedelta(seconds=mae.get())}'
+        print(colors.BLUE + msg + colors.ENDC)

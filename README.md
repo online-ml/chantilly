@@ -30,10 +30,13 @@ pip install git+https://github.com/creme-ml/chantilly
 chantilly run
 ```
 
+## Examples
+
+- [New-York city taxi trips 🚕](examples/taxis)
+
 ## Roadmap
 
 - **HTTP long polling**: clients can interact with `creme` over a straightforward HTTP protocol. Therefore the speed bottleneck comes from the web requests, not from the machine learning. We would like to provide a way to interact with `chantilly` via long-polling. This means that a single connection can be used to process multiple predictions and model updates, which reduces the overall latency.
-
 
 ## Related projects
 
