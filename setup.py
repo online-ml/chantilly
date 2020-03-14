@@ -7,6 +7,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
+        'dill==0.3.1.1',
         'flask==1.1.1',
         'influxdb==5.2.3'
     ],

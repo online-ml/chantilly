@@ -1,11 +1,18 @@
 import os
 
 import click
+from dill import Pickler, Unpickler
 from flask import Flask
 from flask.cli import FlaskGroup
+import shelve
 
 from . import db
 from . import cli
+
+
+# Make the shelve module use dill as a backend instead of the default which is pickle
+shelve.Pickler = Pickler
+shelve.Unpickler = Unpickler
 
 
 def create_app(test_config=None):

@@ -1,7 +1,7 @@
 import creme.base
 import creme.utils.estimator_checks
 import flask
-import pickle
+import dill
 
 from . import db
 
@@ -89,13 +89,13 @@ def learn():
 @bp.route('/model', methods=['GET', 'POST'])
 def set_model():
     if flask.request.method == 'POST':
-        model = pickle.loads(flask.request.get_data())
+        model = dill.loads(flask.request.get_data())
         db.set_model(model, reset_metrics=flask.request.args.get('reset_metrics', True))
         return {}, 201
 
     shelf = db.get_shelf()
     model = shelf['model']
-    return pickle.dumps(model)
+    return dill.dumps(model)
 
 
 @bp.route('/metrics', methods=['GET'])

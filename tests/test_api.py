@@ -37,9 +37,6 @@ def test_model(client, app):
 
 
 def test_predict(client, app, store_model):
-
-
-
     r = client.post(
         '/api/predict',
         data=json.dumps({'features': {}}),

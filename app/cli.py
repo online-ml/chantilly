@@ -1,6 +1,5 @@
-import pickle
-
 import click
+import dill
 from flask.cli import with_appcontext
 
 from . import db
@@ -19,7 +18,7 @@ def init_db_command():
 def set_model_command(path, reset_metrics):
 
     with open(path, 'rb') as f:
-        model = pickle.load(f)
+        model = dill.load(f)
         db.set_model(model=model, reset_metrics=reset_metrics)
 
     click.echo('Model has been set.')
