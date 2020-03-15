@@ -28,7 +28,7 @@ if __name__ == '__main__':
     taxis = datasets.Taxis()
     now = next(iter(taxis))[0]['pickup_datetime']
     mae = metrics.MAE()
-    host = 'http://127.0.0.1:5000'
+    host = 'http://localhost:5000'
     predictions = {}
 
     for trip_no, trip, duration in stream.simulate_qa(

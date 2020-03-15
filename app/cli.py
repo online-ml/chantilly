@@ -15,7 +15,7 @@ def init_db_command():
 @click.argument('path')
 @click.option('--reset_metrics', is_flag=True)
 @with_appcontext
-def set_model_command(path, reset_metrics):
+def set_model_command(path: str, reset_metrics: bool):
 
     with open(path, 'rb') as f:
         model = dill.load(f)

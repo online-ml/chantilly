@@ -1,7 +1,7 @@
 import os
 
 import click
-from dill import Pickler, Unpickler
+import dill
 from flask import Flask
 from flask.cli import FlaskGroup
 import shelve
@@ -11,11 +11,11 @@ from . import cli
 
 
 # Make the shelve module use dill as a backend instead of the default which is pickle
-shelve.Pickler = Pickler
-shelve.Unpickler = Unpickler
+shelve.Pickler = dill.Pickler  # type: ignore
+shelve.Unpickler = dill.Unpickler  # type: ignore
 
 
-def create_app(test_config=None):
+def create_app(test_config: dict=None):
 
     app = Flask('chantilly', instance_relative_config=True)
 
@@ -39,11 +39,6 @@ def create_app(test_config=None):
         os.makedirs(app.instance_path)
     except OSError:
         pass
-
-    # A simple page that says hello
-    @app.route('/hello')
-    def hello():
-        return 'Hello, World!'
 
     app.teardown_appcontext(db.close_influx)
     app.teardown_appcontext(db.close_shelf)

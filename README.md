@@ -6,33 +6,44 @@
   <b>chantilly</b> is a tool for deploying <a href="https://www.wikiwand.com/en/Online_machine_learning">online machine learning</a> models built with <a href="https://github.com/creme-ml/creme">creme</a> into production. It takes care of building API routes, visualizing activity, monitoring performance, and alerting you if something goes wrong.
 </p>
 
-## Setup
+## Installation
 
-### MacOS
+```sh
+> pip install git+https://github.com/creme-ml/chantilly
+```
+
+## Usage
+
+```sh
+> chantilly run
+```
 
 **InfluxDB**
 
 ```sh
-brew install influxdb
-influxd -config /usr/local/etc/influxdb.conf
+> brew install influxdb
+> influxd -config /usr/local/etc/influxdb.conf
 ```
 
 **Grafana**
 
 ```sh
-docker run -p 3000:3000 --env GF_SECURITY_ADMIN_USER=admin --env GF_SECURITY_ADMIN_PASSWORD=admin grafana/grafana
-```
-
-**chantilly**
-
-```sh
-pip install git+https://github.com/creme-ml/chantilly
-chantilly run
+> docker run -p 3000:3000 --env GF_SECURITY_ADMIN_USER=admin --env GF_SECURITY_ADMIN_PASSWORD=admin grafana/grafana
 ```
 
 ## Examples
 
 - [New-York city taxi trips 🚕](examples/taxis)
+
+## Development
+
+```sh
+> git clone https://github.com/creme-ml/chantilly
+> cd chantilly
+> pip install -e ".[dev]"
+> python setup.py develop
+> make test
+```
 
 ## Roadmap
 

@@ -48,13 +48,13 @@ model |= linear_model.LinearRegression()
 
 The required modules are imported within each function for serialization reasons.
 
-We can now upload the model to the `chantilly` instance with an API call, for example via the [`requests`](https://requests.readthedocs.io/en/master/) library. Again, in this example we're assuming that `chantilly` is being ran locally, which means it is accessible at address `http://127.0.0.1:5000`.
+We can now upload the model to the `chantilly` instance with an API call, for example via the [`requests`](https://requests.readthedocs.io/en/master/) library. Again, in this example we're assuming that `chantilly` is being ran locally, which means it is accessible at address `http://localhost:5000`.
 
 ```python
 import dill
 import requests
 
-requests.post('http://127.0.0.1:5000/api/model', data=dill.dumps(model))
+requests.post('http://localhost:5000/api/model', data=dill.dumps(model))
 ```
 
 Note that we use [`dill`](https://dill.readthedocs.io/en/latest/dill.html) to serialize the model, and not [`pickle`](https://docs.python.org/3/library/pickle.html) which is part of Python's standard library. The reason why is because `dill` is able to serialize a whole session, and therefore deals with custom functions and module imports.
@@ -94,3 +94,5 @@ This will produce the following output:
 #0000021 departs at 2016-01-01 00:06:12
 #0000022 departs at 2016-01-01 00:06:22
 ```
+
+By default the `simulate.py` script will take around 6 months to terminate because that's the time span of the dataset. You can increase the `SPEED_UP` variable inside the script in order to accelerate the simulation.

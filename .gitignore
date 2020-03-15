@@ -15,3 +15,5 @@ build/
 
 *.db
 *.pkl
+
+.mypy_cache/*
