@@ -11,27 +11,49 @@
 
 <body>
 
-    <header id="header">
-        <h1>Chantilly</h1>
-    </header>
+    <div id="app">
+        <header id="header">
+            <h1>Chantilly</h1>
+        </header>
 
-    <main>
-        <h2>Metric</h2>
-        <p>
-            Coucou panda!
-        </p>
-    </main>
+        <main>
+            <h2>Metric</h2>
+            <p>
+                [[ message ]]
+            </p>
 
-    <!-- <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script> -->
+            <div v-for="(score, name) in metrics">
+                [[ name ]]: [[ score ]]
+            </div>
+
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 
     <script>
-        console.log('hello!')
-        var es = new EventSource("{{ url_for('api.metric_updates') }}");
-        es.onmessage = function(e) {
-            console.log(e);
-            var data = JSON.parse(e.data);
-            console.log(data);
-        };
+        var app = new Vue({
+            delimiters: ['[[', ']]'],
+            el: '#app',
+            data: {
+                message: 'Hello Vue!',
+                metrics: {
+                    'MSE': null
+                }
+            },
+            mounted: function() {
+                var es = new EventSource("{{ url_for('api.metric_updates') }}");
+                var self = this;
+                es.onmessage = function(e) {
+                    var metrics = JSON.parse(e.data);
+                    self.metrics = metrics;
+                };
+            }
+        })
+    </script>
+
+    <script>
+
     </script>
 
 </body>
