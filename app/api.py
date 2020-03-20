@@ -1,3 +1,7 @@
+import copy
+import json
+import queue
+
 import creme.base
 import creme.utils.estimator_checks
 import flask
@@ -8,19 +12,23 @@ from . import db
 
 bp = flask.Blueprint('api', __name__, url_prefix='/api')
 
+queue = queue.Queue()
 
 @bp.route('/predict', methods=['POST'])
 def predict():
 
     payload = flask.request.json
 
+    # We make a copy because the model might modify the features in-place
+    features = copy.deepcopy(payload['features'])
+
     # Load the model
     shelf = db.get_shelf()
     model = shelf['model']
     if isinstance(creme.utils.estimator_checks.guess_model(model), creme.base.Classifier):
-        pred = model.predict_proba_one(payload['features'])
+        pred = model.predict_proba_one(x=features)
     else:
-        pred = model.predict_one(payload['features'])
+        pred = model.predict_one(x=features)
 
     # If an ID is provided, then we store the features in order to be able to use them for learning
     # further down the line.
@@ -65,22 +73,16 @@ def learn():
     # Update the metric
     metrics = shelf['metrics']
     for metric in metrics:
-        metric.update(payload['target'], prediction)
+        metric.update(y_true=payload['target'], y_pred=prediction)
     shelf['metrics'] = metrics
 
-    # Store the current metric value
-    if not flask.current_app.config['API_ONLY']:
-        influx = db.get_influx()
-        ok = influx.write_points([{
-            'measurement': 'metrics',
-            'fields': {
-                metric.__class__.__name__: metric.get()
-                for metric in metrics
-            }
-        }])
+    queue.put({
+        metric.__class__.__name__: metric.get()
+        for metric in metrics
+    })
 
     # Update the model
-    model.fit_one(features, payload['target'])
+    model.fit_one(x=features, y=payload['target'])
     shelf['model'] = model
 
     return {}, 201
@@ -108,3 +110,12 @@ def metrics():
         metric.__class__.__name__: metric.get()
         for metric in metrics
     }
+
+
+@bp.route('/metric-updates')
+def metric_updates():
+    def updates():
+        while True:
+            metrics = queue.get()  # blocks while queue is empty
+            yield f'data: {json.dumps(metrics)}\n\n'
+    return flask.Response(updates(), mimetype='text/event-stream')

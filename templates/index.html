@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chantilly</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8"/>
+
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <header id="header">
+        <h1>Chantilly</h1>
+    </header>
+
+    <main>
+        <h2>Metric</h2>
+        <p>
+            Coucou panda!
+        </p>
+    </main>
+
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script> -->
+
+    <script>
+        console.log('hello!')
+        var es = new EventSource("{{ url_for('api.metric_updates') }}");
+        es.onmessage = function(e) {
+            console.log(e);
+            var data = JSON.parse(e.data);
+            console.log(data);
+        };
+    </script>
+
+</body>
+</html>

@@ -11,6 +11,12 @@ def init_db_command():
     db.init_db()
 
 
+@click.command('drop-db')
+@with_appcontext
+def drop_db_command():
+    db.drop_db()
+
+
 @click.command('set-model')
 @click.argument('path')
 @click.option('--reset_metrics', is_flag=True)

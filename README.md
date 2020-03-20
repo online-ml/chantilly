@@ -18,19 +18,6 @@
 > chantilly run
 ```
 
-**InfluxDB**
-
-```sh
-> brew install influxdb
-> influxd -config /usr/local/etc/influxdb.conf
-```
-
-**Grafana**
-
-```sh
-> docker run -p 3000:3000 --env GF_SECURITY_ADMIN_USER=admin --env GF_SECURITY_ADMIN_PASSWORD=admin grafana/grafana
-```
-
 ## Examples
 
 - [New-York city taxi trips 🚕](examples/taxis)
@@ -43,11 +30,14 @@
 > pip install -e ".[dev]"
 > python setup.py develop
 > make test
+> export FLASK_ENV=development
+> chantilly run
 ```
 
 ## Roadmap
 
 - **HTTP long polling**: clients can interact with `creme` over a straightforward HTTP protocol. Therefore the speed bottleneck comes from the web requests, not from the machine learning. We would like to provide a way to interact with `chantilly` via long-polling. This means that a single connection can be used to process multiple predictions and model updates, which reduces the overall latency.
+- **Grafana dashboard**: The current dashboard is a quick-and-dirty proof of concept. In the long term, we would like to provide a straighforward way to connect with a [Grafana](https://grafana.com/) instance without having to get your hands dirty. Ideally, we would like to use SQLite as a data source for simplicity reasons. However, The Grafana team [has not planned](https://github.com/grafana/grafana/issues/1542#issuecomment-425684417) to add support for SQLite. Instead, they encourage users to use [plugins](https://grafana.com/docs/grafana/latest/plugins/developing/datasources/). We might also look into [Prometheus](https://prometheus.io/) and [InfluxDB](https://www.influxdata.com/).
 
 ## Related projects
 

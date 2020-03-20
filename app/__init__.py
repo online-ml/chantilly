@@ -2,7 +2,7 @@ import os
 
 import click
 import dill
-from flask import Flask
+from flask import Flask, send_from_directory
 from flask.cli import FlaskGroup
 import shelve
 
@@ -22,9 +22,7 @@ def create_app(test_config: dict=None):
     # Set default configuation
     app.config.from_mapping(
         SECRET_KEY='dev',
-        INFLUX_DB='chantilly',
-        SHELVE_PATH='chantilly',
-        API_ONLY=False
+        SHELVE_PATH='chantilly'
     )
 
     if test_config is None:
@@ -40,14 +38,25 @@ def create_app(test_config: dict=None):
     except OSError:
         pass
 
-    app.teardown_appcontext(db.close_influx)
     app.teardown_appcontext(db.close_shelf)
     app.cli.add_command(cli.init_db_command)
+    app.cli.add_command(cli.drop_db_command)
     app.cli.add_command(cli.set_model_command)
 
-    # Register routes
     from . import api
     app.register_blueprint(api.bp)
+
+    from . import dashboard
+    app.register_blueprint(dashboard.bp)
+    app.add_url_rule('/', endpoint='index')
+
+    # https://flask.palletsprojects.com/en/1.1.x/patterns/favicon/
+    @app.route('/favicon.ico')
+    def favicon():
+        return send_from_directory(
+            os.path.join(app.root_path, 'static'),
+            'favicon.ico', mimetype='image/vnd.microsoft.icon'
+        )
 
     return app
 

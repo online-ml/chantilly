@@ -10,7 +10,7 @@ setup(
         'creme>=0.5.0',
         'dill==0.3.1.1',
         'flask==1.1.1',
-        'influxdb==5.2.3'
+        #'influxdb==5.2.3'
     ],
     extras_require={
         'dev': [

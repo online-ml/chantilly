@@ -8,7 +8,7 @@ from creme import stream
 import requests
 
 
-SPEED_UP = 1  # Increase this to make the simulation go faster
+SPEED_UP = 5  # Increase this to make the simulation go faster
 
 
 def sleep(td: dt.timedelta):
@@ -67,7 +67,7 @@ if __name__ == '__main__':
         now = arrival_time
 
         # Ask chantilly to update the model
-        requests.post(host + '/api/learn', json={'id': trip_no})
+        requests.post(host + '/api/learn', json={'id': trip_no, 'target': duration})
 
         # Update the metric
         mae.update(y_true=duration, y_pred=predictions.pop(trip_no))
