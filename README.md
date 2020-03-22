@@ -12,11 +12,114 @@
 > pip install git+https://github.com/creme-ml/chantilly
 ```
 
-## Usage
+## User guide
+
+### Running the server
+
+Once you've followed the installation step, you'll get access to the `chantilly` CLI. You can see the available commands by running `chantilly --help`. You can start a server with the `run` command:
 
 ```sh
 > chantilly run
 ```
+
+This will start a [Flask](https://flask.palletsprojects.com/en/1.0.x/) server with all the necessary routes for uploading a model, training it, making predictions with it, and monitoring it. By default, the server will be accessible at [`localhost:5000`](http://localhost:5000), which is what we will be using in the rest of the examples in the user guide. You can run `chantilly routes` in order to see all the available routes.
+
+### Uploading a model
+
+You can upload a `creme` model by sending a POST request to the `@/api/model` route. Because `chantilly` uses [`dill`](https://github.com/uqfoundation/dill) for serialization, you'll have to use that too. For instance:
+
+```py
+from creme import compose
+from creme import linear_model
+from creme import preprocessing
+import dill
+import requests
+
+model = compose.Pipeline(
+    preprocessing.StandardScaler(),
+    linear_model.LinearRegression()
+)
+
+requests.post('http://localhost:5000/api/model', data=dill.dumps(model))
+```
+
+Likewise, the model can be retrieved by sending a GET request to `@/api/model`.
+
+### Making a prediction
+
+Predictions can be obtained by sending a POST request to `@/api/predict`. The payload you send has to contain a field named `'features'`. The value of this field will be passed to the `predict_one` method of the model you uploaded earlier on. Here is an example:
+
+```py
+r = requests.post('http://localhost:5000/api/predict', json={
+    'id': 42,
+    'features': {
+        'shop': 'Ikea',
+        'item': 'Dombäs',
+        'date': '2020-03-22T10:42:29Z'
+    }
+})
+
+print(r.json()['prediction'])
+```
+
+Note that in the previous snippet we've also provided an `'id'` field. This field is optional. If is is provided, then the features will be stored by the `chantilly` server, along with the prediction. This allows not having to provide the features again when you want to update the model later on.
+
+### Updating the model
+
+The model can be updated by sending a POST request to `@/api/learn`. If you've provided an ID in an earlier call to `@/api/predict`, then you only have to provide said ID along with the ground truth:
+
+```py
+requests.post('http://localhost:5000/api/learn', json={
+    'id': 42,
+    'ground_truth': 10.21
+})
+```
+
+However, if you haven't passed an ID earlier on, then you also directly pass the features:
+
+```py
+requests.post('http://localhost:5000/api/learn', json={
+    'features': {
+        'shop': 'Ikea',
+        'item': 'Dombäs',
+        'date': '2020-03-22T10:42:29Z'
+    },
+    'ground_truth': 10.21
+})
+```
+
+Note that if both the `'id'` and `'features'` fields are provided, then `'id'` will have precedence.
+
+### Monitoring metrics
+
+You can access the current metrics via a GET request to the `@/api/metrics` route.
+
+Additionally, you can access a stream of metric updates by using the `@/api/stream/metrics`. This is a streaming route which implements [server-sent events (SSE)](https://www.wikiwand.com/en/Server-sent_events). As such it will notify listeners every time the metrics are updates. For instance, you can use the [`sseclient`](https://github.com/btubbs/sseclient) library to monitor the metrics from a Python script:
+
+```py
+import json
+import sseclient
+
+messages = sseclient.SSEClient('http://localhost:5000/api/stream/metrics')
+
+for msg in messages:
+    metrics = json.loads(msg.data)
+    print(metrics)
+```
+
+You can use the following piece of JavaScript to do the same thing in a browser:
+
+```js
+var es = new EventSource("http://localhost:5000/api/stream/metrics");
+es.onmessage = function(e) {
+    var metrics = JSON.parse(e.data);
+    console.log(metrics)
+};
+```
+
+### Deployment
+
+Essentially, `chantilly` is just a Flask application. Therefore, it allows the same [deployment options](https://flask.palletsprojects.com/en/1.1.x/deploying/) as any other Flask application.
 
 ## Examples
 
@@ -42,7 +145,7 @@
 
 ## Similar alternatives
 
-Most machine learning deployment tools only support making predictions with a trained model. They don't cater to online models which can be updated on the fly. However, some of them are very interesting and are very much worth looking into!
+Most machine learning deployment tools only support making predictions with a trained model. They don't cater to online models which can be updated on the fly. Nonetheless, some of them are quite interesting and are very much worth looking into!
 
 - [Cortex](https://github.com/cortexlabs/cortex)
 - [Clipper](https://github.com/ucbrise/clipper)

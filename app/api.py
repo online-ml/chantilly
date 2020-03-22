@@ -12,7 +12,8 @@ from . import db
 
 bp = flask.Blueprint('api', __name__, url_prefix='/api')
 
-queue = queue.Queue()
+METRICS_QUEUE = queue.Queue(maxsize=1)
+
 
 @bp.route('/predict', methods=['POST'])
 def predict():
@@ -50,16 +51,12 @@ def learn():
     shelf = db.get_shelf()
 
     # If an ID is given, then check if any associated features and prediction are stored
-    features = None
+    features = payload.get('features')
     prediction = None
     if 'id' in payload:
         memory = shelf.get('#%s' % payload['id'], {})
         features = memory.get('features')
         prediction = memory.get('prediction')
-
-    # If features are provided in the request, then they have precedence
-    if 'features' in payload:
-        features = payload['features']
 
     # Raise an error if no features are provided
     if features is None:
@@ -73,16 +70,23 @@ def learn():
     # Update the metric
     metrics = shelf['metrics']
     for metric in metrics:
-        metric.update(y_true=payload['target'], y_pred=prediction)
+        metric.update(y_true=payload['ground_truth'], y_pred=prediction)
     shelf['metrics'] = metrics
 
-    queue.put({
-        metric.__class__.__name__: metric.get()
-        for metric in metrics
-    })
+    # Push the current metric values into the queue
+    msg = {metric.__class__.__name__: metric.get() for metric in metrics}
+    for _ in range(3):
+        try:
+            METRICS_QUEUE.put_nowait(msg)
+        except queue.Full:
+            try:
+                METRICS_QUEUE.get_nowait()
+            except queue.Empty:
+                pass
+        break
 
     # Update the model
-    model.fit_one(x=features, y=payload['target'])
+    model.fit_one(x=features, y=payload['ground_truth'])
     shelf['model'] = model
 
     return {}, 201
@@ -102,20 +106,14 @@ def set_model():
 
 @bp.route('/metrics', methods=['GET'])
 def metrics():
-
     shelf = db.get_shelf()
-    metrics = shelf['metrics']
-
-    return {
-        metric.__class__.__name__: metric.get()
-        for metric in metrics
-    }
+    return {metric.__class__.__name__: metric.get() for metric in shelf['metrics']}
 
 
-@bp.route('/metric-updates')
-def metric_updates():
-    def updates():
+@bp.route('/stream/metrics', methods=['GET'])
+def stream_metrics():
+    def stream():
         while True:
-            metrics = queue.get()  # blocks while queue is empty
+            metrics = METRICS_QUEUE.get()  # blocks while queue is empty
             yield f'data: {json.dumps(metrics)}\n\n'
-    return flask.Response(updates(), mimetype='text/event-stream')
+    return flask.Response(stream(), mimetype='text/event-stream')
