@@ -6,11 +6,12 @@ import uuid
 from creme import tree
 
 from app import db
+from app import exceptions
 
 
 
 @pytest.fixture
-def store_model(client):
+def model_fixture(client):
     client.post('/api/model', data=pickle.dumps(tree.DecisionTreeClassifier()))
 
 
@@ -36,9 +37,8 @@ def test_model(client, app):
     assert model.probe == probe
 
 
-def test_predict(client, app, store_model):
-    r = client.post(
-        '/api/predict',
+def test_predict(client, app, model_fixture):
+    r = client.post('/api/predict',
         data=json.dumps({'features': {}}),
         content_type='application/json'
     )
@@ -46,10 +46,9 @@ def test_predict(client, app, store_model):
     assert 'prediction' in r.json
 
 
-def test_predict_with_id(client, app, store_model):
+def test_predict_with_id(client, app, model_fixture):
 
-    r = client.post(
-        '/api/predict',
+    r = client.post('/api/predict',
         data=json.dumps({'features': {}, 'id': '90210'}),
         content_type='application/json'
     )
@@ -61,11 +60,18 @@ def test_predict_with_id(client, app, store_model):
         assert '#90210' in shelf
 
 
-def test_learn(client, app, store_model):
+def test_predict_no_features(client, app, model_fixture):
+    with pytest.raises(exceptions.InvalidUsage):
+        client.post('/api/predict',
+            data=json.dumps({'id': 42}),
+            content_type='application/json'
+        )
 
-    r = client.post(
-        '/api/learn',
-        data=json.dumps({'features': {'x': 1}, 'target': True}),
+
+def test_learn(client, app, model_fixture):
+
+    r = client.post('/api/learn',
+        data=json.dumps({'features': {'x': 1}, 'ground_truth': True}),
         content_type='application/json'
     )
     assert r.status_code == 201
@@ -73,21 +79,17 @@ def test_learn(client, app, store_model):
     with app.app_context():
         for metric in db.get_shelf()['metrics']:
             assert metric.n == 1
-        if not app.config['API_ONLY']:
-            assert len(db.get_influx().query('SELECT * FROM scores;')) == 1
 
 
-def test_learn_with_id(client, app, store_model):
+def test_learn_with_id(client, app, model_fixture):
 
-    client.post(
-        '/api/predict',
+    client.post('/api/predict',
         data=json.dumps({'id': 42, 'features': {'x': 1}}),
         content_type='application/json'
     )
 
-    r = client.post(
-        '/api/learn',
-        data=json.dumps({'id': 42, 'target': True}),
+    r = client.post('/api/learn',
+        data=json.dumps({'id': 42, 'ground_truth': True}),
         content_type='application/json'
     )
     assert r.status_code == 201
@@ -95,5 +97,19 @@ def test_learn_with_id(client, app, store_model):
     with app.app_context():
         for metric in db.get_shelf()['metrics']:
             assert metric.n == 1
-        if not app.config['API_ONLY']:
-            assert len(db.get_influx().query('SELECT * FROM scores;')) == 1
+
+
+def test_learn_no_ground_truth(client, app, model_fixture):
+    with pytest.raises(exceptions.InvalidUsage):
+        client.post('/api/learn',
+            data=json.dumps({'features': {'x': 1}}),
+            content_type='application/json'
+        )
+
+
+def test_learn_no_features(client, app, model_fixture):
+    with pytest.raises(exceptions.InvalidUsage):
+        client.post('/api/learn',
+            data=json.dumps({'ground_truth': True}),
+            content_type='application/json'
+        )

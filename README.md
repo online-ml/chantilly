@@ -47,7 +47,7 @@ Likewise, the model can be retrieved by sending a GET request to `@/api/model`.
 
 ### Making a prediction
 
-Predictions can be obtained by sending a POST request to `@/api/predict`. The payload you send has to contain a field named `'features'`. The value of this field will be passed to the `predict_one` method of the model you uploaded earlier on. Here is an example:
+Predictions can be obtained by sending a POST request to `@/api/predict`. The payload you send has to contain a field named `features`. The value of this field will be passed to the `predict_one` method of the model you uploaded earlier on. Here is an example:
 
 ```py
 r = requests.post('http://localhost:5000/api/predict', json={
@@ -62,7 +62,7 @@ r = requests.post('http://localhost:5000/api/predict', json={
 print(r.json()['prediction'])
 ```
 
-Note that in the previous snippet we've also provided an `'id'` field. This field is optional. If is is provided, then the features will be stored by the `chantilly` server, along with the prediction. This allows not having to provide the features again when you want to update the model later on.
+Note that in the previous snippet we've also provided an `id` field. This field is optional. If is is provided, then the features will be stored by the `chantilly` server, along with the prediction. This allows not having to provide the features again when you want to update the model later on.
 
 ### Updating the model
 
@@ -88,7 +88,7 @@ requests.post('http://localhost:5000/api/learn', json={
 })
 ```
 
-Note that if both the `'id'` and `'features'` fields are provided, then `'id'` will have precedence.
+Note that the `id` field will have precedence in case both the `id` and `features` are provided.
 
 ### Monitoring metrics
 

@@ -8,9 +8,9 @@ setup(
     zip_safe=False,
     install_requires=[
         'creme>=0.5.0',
-        'dill==0.3.1.1',
-        'flask==1.1.1',
-        #'influxdb==5.2.3'
+        'dill>=0.3.1.1',
+        'flask>=1.1.1',
+        'marshmallow>=3.5.1'
     ],
     extras_require={
         'dev': [

@@ -21,7 +21,7 @@ def test_phishing(client, app):
             content_type='application/json'
         )
         client.post('/api/learn',
-            data=json.dumps({'features': x, 'target': y}),
+            data=json.dumps({'features': x, 'ground_truth': y}),
             content_type='application/json'
         )
 

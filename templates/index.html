@@ -42,7 +42,7 @@
                 }
             },
             mounted: function() {
-                var es = new EventSource("{{ url_for('api.metric_updates') }}");
+                var es = new EventSource("{{ url_for('api.stream_metrics') }}");
                 var self = this;
                 es.onmessage = function(e) {
                     var metrics = JSON.parse(e.data);
