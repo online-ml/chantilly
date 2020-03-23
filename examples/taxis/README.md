@@ -95,4 +95,4 @@ This will produce the following output:
 #0000022 departs at 2016-01-01 00:06:22
 ```
 
-By default the `simulate.py` script will take around 6 months to terminate because that's the time span of the dataset. You can increase the `SPEED_UP` variable inside the script in order to accelerate the simulation.
+By default the `simulate.py` script will take around 6 months to terminate because that's the time span of the dataset. You can speed up the simulation by running `python simulate.py SPEED_UP` where `SPEED_UP` is the speed up amount (it defaults to 1).

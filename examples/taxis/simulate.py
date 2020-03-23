@@ -1,3 +1,4 @@
+import argparse
 import datetime as dt
 import json
 import time
@@ -8,14 +9,6 @@ from creme import stream
 import requests
 
 
-SPEED_UP = 5  # Increase this to make the simulation go faster
-
-
-def sleep(td: dt.timedelta):
-    if td.seconds >= 0:
-        time.sleep(td.seconds / SPEED_UP)
-
-
 class colors:
     GREEN = '\033[92m'
     BLUE = '\033[94m'
@@ -23,6 +16,14 @@ class colors:
 
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('speed_up', type=int, nargs='?', default=1)
+    args = parser.parse_args()
+
+    def sleep(td: dt.timedelta):
+        if td.seconds >= 0:
+            time.sleep(td.seconds / args.speed_up)
 
     # Use the first trip's departure time as a reference time
     taxis = datasets.Taxis()
@@ -67,7 +68,7 @@ if __name__ == '__main__':
         now = arrival_time
 
         # Ask chantilly to update the model
-        requests.post(host + '/api/learn', json={'id': trip_no, 'target': duration})
+        requests.post(host + '/api/learn', json={'id': trip_no, 'ground_truth': duration})
 
         # Update the metric
         mae.update(y_true=duration, y_pred=predictions.pop(trip_no))
