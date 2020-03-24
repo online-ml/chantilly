@@ -111,7 +111,7 @@ You can use the following piece of JavaScript to do the same thing in a browser:
 
 ```js
 var es = new EventSource("http://localhost:5000/api/stream/metrics");
-es.onmessage = function(e) {
+es.onmessage = e => {
     var metrics = JSON.parse(e.data);
     console.log(metrics)
 };

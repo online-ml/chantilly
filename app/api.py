@@ -24,7 +24,7 @@ class MessageAnnouncer:
         self.listeners.append(queue.Queue(maxsize=1))
         return self.listeners[-1]
 
-    def annouce(self, msg):
+    def announce(self, msg):
         # TODO: there's probably a better way to deal with listeners that aren't listening anymore
         for i in reversed(range(len(self.listeners))):
             try:
@@ -116,7 +116,7 @@ def learn():
 
     # Push the current metric values into the queue
     msg = {metric.__class__.__name__: metric.get() for metric in metrics}
-    METRICS_ANNOUNCER.annouce(msg)
+    METRICS_ANNOUNCER.announce(msg)
 
     # Update the model
     model.fit_one(x=features, y=payload['ground_truth'])

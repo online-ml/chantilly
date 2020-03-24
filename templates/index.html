@@ -37,16 +37,24 @@
             el: '#app',
             data: {
                 message: 'Hello Vue!',
-                metrics: {
-                    'MSE': null
-                }
+                metrics: {}
             },
             mounted: function() {
+                // Get the current metrics
+                const options = {
+                    method: 'GET',
+                    headers: {'Accept': 'application/json'}
+                };
+                fetch("{{ url_for('api.metrics') }}", options)
+                    .then(r => r.json())
+                    .then(metrics => { this.metrics = metrics })
+                    .catch(error => console.error(error));
+
+                // Listen for metric updates
                 var es = new EventSource("{{ url_for('api.stream_metrics') }}");
-                var self = this;
-                es.onmessage = function(e) {
+                es.onmessage = e => {
                     var metrics = JSON.parse(e.data);
-                    self.metrics = metrics;
+                    this.metrics = metrics;
                 };
             }
         })
