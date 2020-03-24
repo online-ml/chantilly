@@ -75,7 +75,7 @@ requests.post('http://localhost:5000/api/learn', json={
 })
 ```
 
-However, if you haven't passed an ID earlier on, then you also directly pass the features:
+However, if you haven't passed an ID earlier on, then you have to provide the features yourself:
 
 ```py
 requests.post('http://localhost:5000/api/learn', json={
@@ -88,7 +88,7 @@ requests.post('http://localhost:5000/api/learn', json={
 })
 ```
 
-Note that the `id` field will have precedence in case both the `id` and `features` are provided.
+Note that the `id` field will have precedence in case both of `id` and `features` are provided.
 
 ### Monitoring metrics
 
