@@ -14,7 +14,25 @@ from . import exceptions
 
 bp = flask.Blueprint('api', __name__, url_prefix='/api')
 
-METRICS_QUEUE = queue.Queue(maxsize=1)
+
+class MessageAnnouncer:
+
+    def __init__(self):
+        self.listeners = []
+
+    def listen(self):
+        self.listeners.append(queue.Queue(maxsize=1))
+        return self.listeners[-1]
+
+    def annouce(self, msg):
+        # TODO: there's probably a better way to deal with listeners that aren't listening anymore
+        for i in reversed(range(len(self.listeners))):
+            try:
+                self.listeners[i].put_nowait(msg)
+            except queue.Full:
+                del self.listeners[i]
+
+METRICS_ANNOUNCER = MessageAnnouncer()
 
 
 class PredictSchema(mm.Schema):
@@ -98,15 +116,7 @@ def learn():
 
     # Push the current metric values into the queue
     msg = {metric.__class__.__name__: metric.get() for metric in metrics}
-    for _ in range(3):
-        try:
-            METRICS_QUEUE.put_nowait(msg)
-        except queue.Full:
-            try:
-                METRICS_QUEUE.get_nowait()
-            except queue.Empty:
-                pass
-        break
+    METRICS_ANNOUNCER.annouce(msg)
 
     # Update the model
     model.fit_one(x=features, y=payload['ground_truth'])
@@ -136,7 +146,8 @@ def metrics():
 @bp.route('/stream/metrics', methods=['GET'])
 def stream_metrics():
     def stream():
+        messages = METRICS_ANNOUNCER.listen()
         while True:
-            metrics = METRICS_QUEUE.get()  # blocks while queue is empty
+            metrics = messages.get()  # blocks until a new message arrives
             yield f'data: {json.dumps(metrics)}\n\n'
     return flask.Response(stream(), mimetype='text/event-stream')
