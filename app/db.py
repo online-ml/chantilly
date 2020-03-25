@@ -1,6 +1,7 @@
 import contextlib
 import os
 import shelve
+import typing
 
 import creme.base
 import creme.metrics
@@ -38,7 +39,32 @@ def set_model(model: creme.base.Estimator, reset_metrics: bool):
     if not reset_metrics and 'metrics' in shelf:
         return
 
-    if isinstance(creme.utils.estimator_checks.guess_model(model), creme.base.Classifier):
-        shelf['metrics'] = [creme.metrics.LogLoss()]
+    model = creme.utils.estimator_checks.guess_model(model)
+
+    if isinstance(model, creme.base.BinaryClassifier):
+        shelf['metrics'] = [
+            creme.metrics.Accuracy(),
+            creme.metrics.LogLoss(),
+            creme.metrics.Precision(),
+            creme.metrics.Recall(),
+            creme.metrics.F1()
+        ]
+    elif isinstance(model, creme.base.MultiClassifier):
+        shelf['metrics'] = [
+            creme.metrics.Accuracy(),
+            creme.metrics.CrossEntropy(),
+            creme.metrics.MacroPrecision(),
+            creme.metrics.MacroRecall(),
+            creme.metrics.MacroF1(),
+            creme.metrics.MicroPrecision(),
+            creme.metrics.MicroRecall(),
+            creme.metrics.MicroF1()
+        ]
+    elif isinstance(model, creme.base.Regressor):
+        shelf['metrics'] = [
+            creme.metrics.MAE(),
+            creme.metrics.RMSE(),
+            creme.metrics.SMAPE()
+        ]
     else:
-        shelf['metrics'] = [creme.metrics.MSE()]
+        raise ValueError('Unknown model type')

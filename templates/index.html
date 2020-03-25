@@ -1,67 +1,142 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chantilly</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta charset="utf-8"/>
-
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chantilly</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
 
-    <div id="app">
-        <header id="header">
-            <h1>Chantilly</h1>
-        </header>
+  <div id="app">
+    <header id="header">
+      <img class="header-image" src="{{ url_for('static', filename='logo.svg') }}" >
+    </header>
 
-        <main>
-            <h2>Metric</h2>
-            <p>
-                [[ message ]]
-            </p>
+    <main>
 
-            <div v-for="(score, name) in metrics">
-                [[ name ]]: [[ score ]]
+      <div class="columns is-8">
+        <div class="column">
+
+          <h2 class="title">🎯 Metrics</h2>
+          <p v-if="metricsUpdateMoment" class="has-text-grey">
+            Last updated [[ metricsUpdateMoment.fromNow() ]]
+          </p>
+          <p v-else class="has-text-grey">
+            No updates yet
+          </p>
+          <hr>
+
+          <div class="columns">
+            <div class="column" v-for="(score, name) in metrics">
+              <div class="card">
+                <div class="card-content">
+                  <p class="title has-text-centered">[[ numberFormatter.format(score) ]]</p>
+                </div>
+                <footer class="card-footer">
+                  <p class="card-footer-item"><span>[[ name ]]</span></p>
+                </footer>
+              </div>
             </div>
+          </div>
 
-        </main>
-    </div>
+        </div>
+
+        <div class="column">
+
+          <h2 class="title">🔔 Events</h2>
+          <p v-if="eventsUpdateMoment" class="has-text-grey">
+            Last updated [[ eventsUpdateMoment.fromNow() ]]
+          </p>
+          <p v-else class="has-text-grey">
+            No updates yet
+          </p>
+          <hr>
+          <div v-for="event in events">
+            <article class="message" v-bind:class="event.type === 'learn' ? 'is-link' : 'is-primary'">
+              <div class="message-header">
+                <p>[[ event.type === 'learn' ? 'Learn' : 'Predict' ]]</p>
+                <p>[[ event.moment.fromNow() ]]</p>
+              </div>
+              <div class="message-body">
+                <pre style="background-color: transparent; text-align: left; color: inherit; padding: 0;">[[ event.data ]]</pre>
+              </div>
+            </article>
+            <br>
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
 
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-
-    <script>
-        var app = new Vue({
-            delimiters: ['[[', ']]'],
-            el: '#app',
-            data: {
-                message: 'Hello Vue!',
-                metrics: {}
-            },
-            mounted: function() {
-                // Get the current metrics
-                const options = {
-                    method: 'GET',
-                    headers: {'Accept': 'application/json'}
-                };
-                fetch("{{ url_for('api.metrics') }}", options)
-                    .then(r => r.json())
-                    .then(metrics => { this.metrics = metrics })
-                    .catch(error => console.error(error));
-
-                // Listen for metric updates
-                var es = new EventSource("{{ url_for('api.stream_metrics') }}");
-                es.onmessage = e => {
-                    var metrics = JSON.parse(e.data);
-                    this.metrics = metrics;
-                };
-            }
-        })
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
 
     <script>
 
+      var app = new Vue({
+        delimiters: ['[[', ']]'],
+        el: '#app',
+        data: {
+          message: 'Hello Vue!',
+          metrics: {},
+          numberFormatter: new Intl.NumberFormat(),
+          metricsUpdateMoment: null,
+          eventsUpdateMoment: null,
+          events: [],
+          eventCounter: 0
+        },
+        mounted: function() {
+          // Get the current metrics
+          const options = {
+            method: 'GET',
+            headers: {'Accept': 'application/json'}
+          };
+          fetch("{{ url_for('api.metrics') }}", options)
+            .then(r => r.json())
+            .then(metrics => { this.metrics = metrics; this.metricsUpdateMoment = moment() })
+            .catch(error => console.error(error));
+
+          // Listen for metric updates
+          var metricUpdates = new EventSource("{{ url_for('api.stream_metrics') }}");
+          metricUpdates.onmessage = e => {
+            var metrics = JSON.parse(e.data);
+            this.metrics = metrics;
+            this.metricsUpdateMoment = moment();
+          };
+
+          // Listen for event updates
+          var eventUpdates = new EventSource("{{ url_for('api.stream_events') }}");
+          eventUpdates.addEventListener('predict', e => {
+            var event = {
+              type: 'predict',
+              data: JSON.parse(e.data),
+              moment: moment(),
+              no: this.eventCounter++
+            };
+            this.events = [event].concat(this.events).slice(0, 10);
+            this.eventsUpdateMoment = moment();
+          })
+          eventUpdates.addEventListener('learn', e => {
+            var event = {
+              type: 'learn',
+              data: JSON.parse(e.data),
+              moment: moment(),
+              no: this.eventCounter++
+            };
+            this.events = [event].concat(this.events).slice(0, 10);
+            this.eventsUpdateMoment = moment();
+          });
+        }
+      })
     </script>
 
 </body>

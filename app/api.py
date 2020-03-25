@@ -33,6 +33,14 @@ class MessageAnnouncer:
                 del self.listeners[i]
 
 METRICS_ANNOUNCER = MessageAnnouncer()
+EVENTS_ANNOUNCER = MessageAnnouncer()
+
+
+def format_sse(data: str, event=None) -> str:
+    msg = f'data: {data}\n\n'
+    if event is not None:
+        msg = f'event: {event}\n{msg}'
+    return msg
 
 
 class PredictSchema(mm.Schema):
@@ -60,6 +68,9 @@ def predict():
         pred = model.predict_proba_one(x=features)
     else:
         pred = model.predict_one(x=features)
+
+    msg = json.dumps({'features': payload['features'], 'prediction': pred})
+    EVENTS_ANNOUNCER.announce(format_sse(data=msg, event='predict'))
 
     # If an ID is provided, then we store the features in order to be able to use them for learning
     # further down the line.
@@ -114,9 +125,16 @@ def learn():
         metric.update(y_true=payload['ground_truth'], y_pred=prediction)
     shelf['metrics'] = metrics
 
-    # Push the current metric values into the queue
-    msg = {metric.__class__.__name__: metric.get() for metric in metrics}
-    METRICS_ANNOUNCER.announce(msg)
+    msg = json.dumps({
+        'features': features,
+        'prediction': prediction,
+        'ground_truth': payload['ground_truth']
+    })
+    EVENTS_ANNOUNCER.announce(format_sse(data=msg, event='learn'))
+
+    # Announce the current metric values
+    msg = json.dumps({metric.__class__.__name__: metric.get() for metric in metrics})
+    METRICS_ANNOUNCER.announce(format_sse(data=msg))
 
     # Update the model
     model.fit_one(x=features, y=payload['ground_truth'])
@@ -127,11 +145,14 @@ def learn():
 
 @bp.route('/model', methods=['GET', 'POST'])
 def model():
+
+    # POST: set the model
     if flask.request.method == 'POST':
         model = dill.loads(flask.request.get_data())
         db.set_model(model, reset_metrics=flask.request.args.get('reset_metrics', True))
         return {}, 201
 
+    # GET: return the current model
     shelf = db.get_shelf()
     model = shelf['model']
     return dill.dumps(model)
@@ -149,5 +170,15 @@ def stream_metrics():
         messages = METRICS_ANNOUNCER.listen()
         while True:
             metrics = messages.get()  # blocks until a new message arrives
-            yield f'data: {json.dumps(metrics)}\n\n'
+            yield metrics
+    return flask.Response(stream(), mimetype='text/event-stream')
+
+
+@bp.route('/stream/events', methods=['GET'])
+def stream_events():
+    def stream():
+        messages = EVENTS_ANNOUNCER.listen()
+        while True:
+            event = messages.get()  # blocks until a new message arrives
+            yield event
     return flask.Response(stream(), mimetype='text/event-stream')
