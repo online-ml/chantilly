@@ -169,29 +169,29 @@
 
                 // The data for our dataset
                 data: {
-                    datasets: [{
-                        borderColor: '#d5a6bd',
-                        pointBackgroundColor: '#d5a6bd',
-                        lineTension: 0,
-                        fill: false,
-                        data: [{
-                            x: moment(),
-                            y: this.metrics[name]
-                        }]
+                  datasets: [{
+                    borderColor: '#d5a6bd',
+                    pointBackgroundColor: '#d5a6bd',
+                    lineTension: 0,
+                    fill: false,
+                    data: [{
+                      x: moment(),
+                      y: this.metrics[name]
                     }]
+                  }]
                 },
 
                 // Configuration options go here
                 options: {
-                    scales: {
-                        xAxes: [{
-                            type: 'time',
-                            distribution: 'linear'
-                        }]
-                    },
-                    legend: {
-                        display: false
-                    },
+                  scales: {
+                    xAxes: [{
+                      type: 'time',
+                      distribution: 'linear'
+                    }]
+                  },
+                  legend: {
+                    display: false
+                  },
                 }
               });
               this.charts[name] = chart

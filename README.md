@@ -110,12 +110,53 @@ for msg in messages:
 You can use the following piece of JavaScript to do the same thing in a browser:
 
 ```js
-var es = new EventSource("http://localhost:5000/api/stream/metrics");
+var es = new EventSource('http://localhost:5000/api/stream/metrics');
 es.onmessage = e => {
     var metrics = JSON.parse(e.data);
     console.log(metrics)
 };
 ```
+
+### Monitoring events
+
+You can also listen to all the prediction and learning events via the `@/api/stream/events` route. This will yield SSE events with an event name attached, which is either 'predict' or 'learn'. From a Python interpreter, you can do the following:
+
+```py
+import json
+import sseclient
+
+messages = sseclient.SSEClient('http://localhost:5000/api/stream/events')
+
+for msg in messages:
+    metrics = json.loads(msg.data)
+    print(msg.event, metrics)
+```
+
+In JavaScript, you can you use the [`addEventListener`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener) method:
+
+```js
+var es = new EventSource('http://localhost:5000/api/stream/events');
+
+es.addEventListener('learn', = e => {
+    var data = JSON.parse(e.data);
+    console.log(data.features, data.prediction, data.ground_truth)
+};
+
+es.addEventListener('predict', = e => {
+    var data = JSON.parse(e.data);
+    console.log(data.features, data.prediction)
+};
+```
+
+### Visual monitoring
+
+A live dashboard is accessible if you navigate to [`localhost:5000`](http://localhost:5000) in your browser.
+
+<p align="center">
+  <img src="demo.gif" alt="demo">
+</p>
+
+Under the hood the dashboard is simply listening to streaming routes of the API.
 
 ### Deployment
 
@@ -142,6 +183,14 @@ Essentially, `chantilly` is just a Flask application. Therefore, it allows the s
 - **HTTP long polling**: Currently, clients can interact with `creme` over a straightforward HTTP protocol. Therefore the speed bottleneck comes from the web requests, not from the machine learning. We would like to provide a way to interact with `chantilly` via long-polling. This means that a single connection can be used to process multiple predictions and model updates, which reduces the overall latency.
 - **Scaling**: At the moment `chantilly` is designed to be run as a single server. Ideally we want to allow `chantilly` in a multi-server environment. Predictions are simple to scale because the model can be used concurrently. However, updating the model concurrently leads to [reader-write problems](https://www.wikiwand.com/en/Readers%E2%80%93writers_problem). We have some ideas in the pipe, but this is going to need some careful thinking.
 - **Grafana dashboard**: The current dashboard is a quick-and-dirty proof of concept. In the long term, we would like to provide a straighforward way to connect with a [Grafana](https://grafana.com/) instance without having to get your hands dirty. Ideally, we would like to use SQLite as a data source for simplicity reasons. However, The Grafana team [has not planned](https://github.com/grafana/grafana/issues/1542#issuecomment-425684417) to add support for SQLite. Instead, they encourage users to use [plugins](https://grafana.com/docs/grafana/latest/plugins/developing/datasources/). We might also look into [Prometheus](https://prometheus.io/) and [InfluxDB](https://www.influxdata.com/).
+- **Support more paradigms**: For the moment we cater to regression and classification models. In the future we also want to support other paradigms, such as time series forecasting and recommender systems.
+
+## Technical stack
+
+- [Flask](https://flask.palletsprojects.com/en/1.1.x/) for the web server.
+- [dill](https://dill.readthedocs.io/en/latest/dill.html) for model serialization.
+- [marshmallow](https://marshmallow.readthedocs.io/en/stable/) for the API input validation.
+- [Vue.js](https://vuejs.org/), [Chart.js](https://www.chartjs.org/), and [Moment.js](https://momentjs.com/) for the web interface.
 
 ## Similar alternatives
 
