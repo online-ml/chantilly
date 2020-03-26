@@ -13,7 +13,9 @@
 
   <div id="app">
     <header id="header">
-      <img class="header-image" src="{{ url_for('static', filename='logo.svg') }}" >
+      <a href="https://github.com/creme-ml/chantilly">
+        <img class="header-image" src="{{ url_for('static', filename='logo.svg') }}" >
+      </a>
     </header>
 
     <main>
@@ -30,17 +32,23 @@
           </p>
           <hr>
 
-          <div class="columns">
-            <div class="column" v-for="(score, name) in metrics">
+          <div class="columns is-centered">
+            <div class="column is-one-third" v-for="(value, name) in metrics">
               <div class="card">
                 <div class="card-content">
-                  <p class="title has-text-centered">[[ numberFormatter.format(score) ]]</p>
+                  <p class="title has-text-centered">[[ numberFormatter.format(value) ]]</p>
                 </div>
                 <footer class="card-footer">
                   <p class="card-footer-item"><span>[[ name ]]</span></p>
                 </footer>
               </div>
             </div>
+          </div>
+
+          <div v-for="name in chartsNames" class="has-text-centered">
+            <br>
+            <h3 class="subtitle">[[ name ]]</h3>
+            <canvas :id="name"></canvas>
           </div>
 
         </div>
@@ -55,19 +63,20 @@
             No updates yet
           </p>
           <hr>
-          <div v-for="event in events">
-            <article class="message" v-bind:class="event.type === 'learn' ? 'is-link' : 'is-primary'">
-              <div class="message-header">
-                <p>[[ event.type === 'learn' ? 'Learn' : 'Predict' ]]</p>
-                <p>[[ event.moment.fromNow() ]]</p>
-              </div>
-              <div class="message-body">
-                <pre style="background-color: transparent; text-align: left; color: inherit; padding: 0;">[[ event.data ]]</pre>
-              </div>
-            </article>
-            <br>
-          </div>
-
+          <transition-group name="event-list" tag="div">
+            <div v-for="event in events" v-bind:key="event.no">
+              <article class="message" v-bind:class="event.type === 'learn' ? 'is-link' : 'is-primary'">
+                <div class="message-header">
+                  <p>[[ event.type === 'learn' ? 'Learn' : 'Predict' ]]</p>
+                  <p>[[ event.moment.fromNow() ]]</p>
+                </div>
+                <div class="message-body">
+                  <pre style="background-color: transparent; text-align: left; color: inherit; padding: 0;">[[ event.data ]]</pre>
+                </div>
+              </article>
+              <br>
+            </div>
+          </transition-group>
         </div>
 
       </div>
@@ -78,16 +87,16 @@
 
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
 
-    <script>
-
+    <script type="text/javascript">
       var app = new Vue({
         delimiters: ['[[', ']]'],
         el: '#app',
         data: {
-          message: 'Hello Vue!',
           metrics: {},
+          chartsNames: [],
+          charts: {},
           numberFormatter: new Intl.NumberFormat(),
           metricsUpdateMoment: null,
           eventsUpdateMoment: null,
@@ -102,7 +111,12 @@
           };
           fetch("{{ url_for('api.metrics') }}", options)
             .then(r => r.json())
-            .then(metrics => { this.metrics = metrics; this.metricsUpdateMoment = moment() })
+            .then(metrics => {
+              this.metrics = metrics;
+              this.metricsUpdateMoment = moment();
+              this.chartsNames = Object.keys(metrics);
+            })
+            .then(() => this.initCharts())
             .catch(error => console.error(error));
 
           // Listen for metric updates
@@ -111,6 +125,15 @@
             var metrics = JSON.parse(e.data);
             this.metrics = metrics;
             this.metricsUpdateMoment = moment();
+            for (let [name, value] of Object.entries(this.metrics)) {
+              this.charts[name].data.datasets[0].data.push({
+                x: this.metricsUpdateMoment,
+                y: value
+              });
+              this.charts[name].update();
+              //this.charts[name].data.datasets[0].data.push(value);
+            }
+
           };
 
           // Listen for event updates
@@ -135,9 +158,62 @@
             this.events = [event].concat(this.events).slice(0, 10);
             this.eventsUpdateMoment = moment();
           });
+        },
+        methods: {
+          initCharts: function() {
+            this.chartsNames.forEach(name => {
+              var ctx = document.getElementById(name).getContext('2d');
+              var chart = new Chart(ctx, {
+                // The type of chart we want to create
+                type: 'line',
+
+                // The data for our dataset
+                data: {
+                    datasets: [{
+                        borderColor: '#d5a6bd',
+                        pointBackgroundColor: '#d5a6bd',
+                        lineTension: 0,
+                        fill: false,
+                        data: [{
+                            x: moment(),
+                            y: this.metrics[name]
+                        }]
+                    }]
+                },
+
+                // Configuration options go here
+                options: {
+                    scales: {
+                        xAxes: [{
+                            type: 'time',
+                            distribution: 'linear'
+                        }]
+                    },
+                    legend: {
+                        display: false
+                    },
+                }
+              });
+              this.charts[name] = chart
+            });
+          }
         }
       })
     </script>
+
+    <style lang="css">
+      /* https://vuejs.org/v2/guide/transitions.html#List-Transitions */
+      .event-list-enter-active, .event-list-leave-active {
+        transition: all 1s;
+      }
+      .event-list-enter, .event-leave-to {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      .event-list-move {
+        transition: transform 1s;
+      }
+    </style>
 
 </body>
 </html>
