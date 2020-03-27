@@ -156,7 +156,7 @@ A live dashboard is accessible if you navigate to [`localhost:5000`](http://loca
   <img src="demo.gif" alt="demo">
 </p>
 
-Under the hood the dashboard is simply listening to streaming routes of the API.
+Under the hood the dashboard is simply listening to the API's streaming routes.
 
 ### Deployment
 
