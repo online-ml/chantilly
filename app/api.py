@@ -171,6 +171,13 @@ def learn():
     model.fit_one(x=features, y=payload['ground_truth'])
     shelf['model'] = model
 
+    # Delete the payload from the shelf
+    if 'id' in payload:
+        try:
+            del shelf['#%s' % payload['id']]
+        except KeyError:
+            pass
+
     return {}, 201
 
 

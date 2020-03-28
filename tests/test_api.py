@@ -102,11 +102,21 @@ def test_learn_with_id(client, app, log_reg):
         content_type='application/json'
     )
 
+    # Check the sample has been stored
+    with app.app_context():
+        shelf = db.get_shelf()
+        assert shelf['#42']['features'] == {'x': 1}
+
     r = client.post('/api/learn',
         data=json.dumps({'id': 42, 'ground_truth': True}),
         content_type='application/json'
     )
     assert r.status_code == 201
+
+    # Check the sample has now been removed
+    with app.app_context():
+        shelf = db.get_shelf()
+        assert '#42' not in shelf
 
 
 def test_learn_no_ground_truth(client, app, log_reg):
