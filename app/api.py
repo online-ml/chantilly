@@ -76,12 +76,15 @@ def predict():
     except mm.ValidationError as err:
         raise exceptions.InvalidUsage(message=err.normalized_messages())
 
-    # We make a copy because the model might modify the features in-place
-    features = copy.deepcopy(payload['features'])
-
     # Load the model
     shelf = db.get_shelf()
-    model = shelf['model']
+    try:
+        model = shelf['model']
+    except KeyError:
+        raise exceptions.InvalidUsage(message='You first need to provide a model.')
+
+    # We make a copy because the model might modify the features in-place
+    features = copy.deepcopy(payload['features'])
 
     # Make the prediction
     if hasattr(creme.utils.estimator_checks.guess_model(model), 'predict_proba_one'):
@@ -122,10 +125,16 @@ def learn():
     except mm.ValidationError as err:
         raise exceptions.InvalidUsage(message=err.normalized_messages())
 
+    # Load the model
+    shelf = db.get_shelf()
+    try:
+        model = shelf['model']
+    except KeyError:
+        raise exceptions.InvalidUsage(message='You first need to provide a model.')
+
     # If an ID is given, then check if any associated features and prediction are stored
     features = payload.get('features')
     prediction = None
-    shelf = db.get_shelf()
     if 'id' in payload:
         memory = shelf.get('#%s' % payload['id'], {})
         features = memory.get('features')
@@ -133,10 +142,9 @@ def learn():
 
     # Raise an error if no features are provided
     if features is None:
-        raise exceptions.InvalidUsage('No features are stored and none were provided')
+        raise exceptions.InvalidUsage('No features are stored and none were provided.')
 
     # Obtain a prediction if none was made earlier
-    model = shelf['model']
     if prediction is None:
         prediction = model.predict_proba_one(features)
 

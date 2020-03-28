@@ -10,7 +10,6 @@ from app import db
 from app import exceptions
 
 
-
 @pytest.fixture
 def log_reg(client):
     client.post('/api/model', data=pickle.dumps(linear_model.LogisticRegression()))
@@ -44,7 +43,7 @@ class ModelWithoutFit:
 
 def test_model_without_fit(client, app):
     r = client.post('/api/model', data=pickle.dumps(ModelWithoutFit()))
-    assert r.json == {'message': 'Model does not implement fit_one'}
+    assert r.json == {'message': 'Model does not implement fit_one.'}
 
 
 class ModelWithoutPredict:
@@ -53,7 +52,7 @@ class ModelWithoutPredict:
 
 def test_model_without_predict(client, app):
     r = client.post('/api/model', data=pickle.dumps(ModelWithoutPredict()))
-    assert r.json == {'message': 'Model does not implement predict_one or predict_proba_one'}
+    assert r.json == {'message': 'Model does not implement predict_one or predict_proba_one.'}
 
 
 def test_predict(client, app, log_reg):
@@ -63,6 +62,22 @@ def test_predict(client, app, log_reg):
     )
     assert r.status_code == 200
     assert 'prediction' in r.json
+
+
+def test_predict_no_model(client, app):
+    r = client.post('/api/predict',
+        data=json.dumps({'features': {}}),
+        content_type='application/json'
+    )
+    assert r.json == {'message': 'You first need to provide a model.'}
+
+
+def test_learn_no_model(client, app):
+    r = client.post('/api/learn',
+        data=json.dumps({'features': {'x': 1}, 'ground_truth': True}),
+        content_type='application/json'
+    )
+    assert r.json == {'message': 'You first need to provide a model.'}
 
 
 def test_predict_with_id(client, app, log_reg):
@@ -132,4 +147,4 @@ def test_learn_no_features(client, app, log_reg):
         data=json.dumps({'ground_truth': True}),
         content_type='application/json'
     )
-    assert r.json == {'message': 'No features are stored and none were provided'}
+    assert r.json == {'message': 'No features are stored and none were provided.'}

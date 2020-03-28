@@ -35,13 +35,14 @@ def drop_db():
 def _check_model(model: creme.base.Estimator):
 
     if not hasattr(model, 'fit_one'):
-        raise ValueError('Model does not implement fit_one')
+        raise ValueError('Model does not implement fit_one.')
 
     has_predict = hasattr(model, 'fit_one_one')
-    has_predict_proba = hasattr(model, 'predict_proba_one')
+    has_predict_proba = hasattr(model, 'predict_proba_one.')
 
-    if not hasattr(model, 'fit_one_one') and not hasattr(model, 'predict_proba_one'):
-        raise ValueError('Model does not implement predict_one or predict_proba_one')
+    if not hasattr(model, 'predict_one') and not hasattr(model, 'predict_proba_one'):
+        raise ValueError('Model does not implement predict_one or predict_proba_one.')
+
 
 def set_model(model: creme.base.Estimator, reset_metrics: bool):
 
