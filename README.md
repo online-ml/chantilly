@@ -135,8 +135,11 @@ import sseclient
 messages = sseclient.SSEClient('http://localhost:5000/api/stream/events')
 
 for msg in messages:
-    metrics = json.loads(msg.data)
-    print(msg.event, metrics)
+    data = json.loads(msg.data)
+    if msg.event == 'learn':
+        print(data['features'], data['prediction'], data['ground_truth'])
+    else:
+        print(data['features'], data['prediction'])
 ```
 
 In JavaScript, you can you use the [`addEventListener`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener) method:
