@@ -1,3 +1,6 @@
+from . import flavors
+
+
 class InvalidUsage(Exception):
     status_code = 400
 
@@ -12,3 +15,20 @@ class InvalidUsage(Exception):
         rv = dict(self.payload or ())
         rv['message'] = self.message
         return rv
+
+
+class UnknownFlavor(Exception):
+
+    def __init__(self, *args, **kwargs):
+        msg = (
+            'Allowed flavors are ' +
+            ', '.join([f"'{flavor}'" for flavor in flavors.allowed_flavors()]) +
+            '.'
+        )
+        super().__init__(msg, *args, **kwargs)
+
+
+class FlavorNotSet(Exception):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__('No flavor has been set.', *args, **kwargs)

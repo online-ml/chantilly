@@ -43,6 +43,29 @@ def format_sse(data: str, event=None) -> str:
     return msg
 
 
+class InitSchema(mm.Schema):
+    flavor = mm.fields.Str(required=True)
+
+
+@bp.route('/init', methods=['POST'])
+def init():
+
+    # Validate the payload
+    try:
+        schema = InitSchema()
+        payload = schema.load(flask.request.json)
+    except mm.ValidationError as err:
+        raise exceptions.InvalidUsage(message=err.normalized_messages())
+
+    # Set the flavor
+    try:
+        db.set_flavor(flavor=payload['flavor'])
+    except exceptions.UnknownFlavor as err:
+        raise exceptions.InvalidUsage(message=str(err))
+
+    return {}, 201
+
+
 @bp.route('/model', methods=['GET', 'POST'])
 def model():
 

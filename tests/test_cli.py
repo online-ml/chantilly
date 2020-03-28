@@ -9,7 +9,7 @@ from app import db
 from app import cli
 
 
-def test_set_model(app):
+def test_add_model(app):
     runner = app.test_cli_runner()
 
     # Pickle a model
@@ -20,7 +20,7 @@ def test_set_model(app):
         pickle.dump(model, f)
 
     # Add the model to the shelf through the CLI
-    result = runner.invoke(cli.set_model_command, ['tmp.pkl'])
+    result = runner.invoke(cli.add_model, ['tmp.pkl'])
     assert result.exit_code == 0
 
     # Check that the model has been added to the shelf

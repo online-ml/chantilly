@@ -15,6 +15,26 @@ def log_reg(client):
     client.post('/api/model', data=pickle.dumps(linear_model.LogisticRegression()))
 
 
+def test_init(client, app):
+    r = client.post('/api/init',
+        data=json.dumps({'flavor': 'regression'}),
+        content_type='application/json'
+    )
+    assert r.status_code == 201
+
+    with app.app_context():
+        assert db.get_shelf()['flavor'].name == 'regression'
+
+
+def test_init_bad_flavor(client, app):
+    r = client.post('/api/init',
+        data=json.dumps({'flavor': 'zugzug'}),
+        content_type='application/json'
+    )
+    assert r.status_code == 400
+    assert r.json == {'message': "Allowed flavors are 'regression'."}
+
+
 def test_model_correct(client, app):
 
     # Instantiate a model

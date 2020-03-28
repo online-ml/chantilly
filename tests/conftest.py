@@ -21,10 +21,6 @@ def app():
         'API_ONLY': True
     })
 
-    with app.app_context():
-        db.init_db()
-        #db.set_model(preprocessing.StandardScaler() | linear_model.LogisticRegression(), True)
-
     yield app
 
     with app.app_context():
