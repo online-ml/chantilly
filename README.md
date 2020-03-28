@@ -43,11 +43,18 @@ model = compose.Pipeline(
 requests.post('http://localhost:5000/api/model', data=dill.dumps(model))
 ```
 
-Likewise, the model can be retrieved by sending a GET request to `@/api/model`.
+Likewise, the model can be retrieved by sending a GET request to `@/api/model`:
+
+```py
+r = requests.get('http://localhost:5000/api/model')
+model = pickle.loads(r.content)
+```
+
+Note that `chantilly` only supports models that implement `fit_one` and either one of `predict_one` and `predict_proba_one`.
 
 ### Making a prediction
 
-Predictions can be obtained by sending a POST request to `@/api/predict`. The payload you send has to contain a field named `features`. The value of this field will be passed to the `predict_one` method of the model you uploaded earlier on. Here is an example:
+Predictions can be obtained by sending a POST request to `@/api/predict`. The payload you send has to contain a field named `features`. The value of this field will be passed to the `predict_one` method of the model you uploaded earlier on. If the model you provided `predict_proba_one` then that will be used instead. Here is an example:
 
 ```py
 r = requests.post('http://localhost:5000/api/predict', json={

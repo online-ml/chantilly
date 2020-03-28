@@ -43,6 +43,24 @@ def format_sse(data: str, event=None) -> str:
     return msg
 
 
+@bp.route('/model', methods=['GET', 'POST'])
+def model():
+
+    # POST: set the model
+    if flask.request.method == 'POST':
+        model = dill.loads(flask.request.get_data())
+        try:
+            db.set_model(model, reset_metrics=flask.request.args.get('reset_metrics', True))
+        except ValueError as err:
+            raise exceptions.InvalidUsage(message=str(err))
+        return {}, 201
+
+    # GET: return the current model
+    shelf = db.get_shelf()
+    model = shelf['model']
+    return dill.dumps(model)
+
+
 class PredictSchema(mm.Schema):
     features = mm.fields.Dict(required=True)
     id = mm.fields.Raw()  # as long as it can be coerced to a str it's okay
@@ -56,7 +74,7 @@ def predict():
         schema = PredictSchema()
         payload = schema.load(flask.request.json)
     except mm.ValidationError as err:
-        raise exceptions.InvalidUsage(err)
+        raise exceptions.InvalidUsage(message=err.normalized_messages())
 
     # We make a copy because the model might modify the features in-place
     features = copy.deepcopy(payload['features'])
@@ -64,11 +82,14 @@ def predict():
     # Load the model
     shelf = db.get_shelf()
     model = shelf['model']
-    if isinstance(creme.utils.estimator_checks.guess_model(model), creme.base.Classifier):
+
+    # Make the prediction
+    if hasattr(creme.utils.estimator_checks.guess_model(model), 'predict_proba_one'):
         pred = model.predict_proba_one(x=features)
     else:
         pred = model.predict_one(x=features)
 
+    # Announce the prediction
     msg = json.dumps({'features': payload['features'], 'prediction': pred})
     EVENTS_ANNOUNCER.announce(format_sse(data=msg, event='predict'))
 
@@ -99,7 +120,7 @@ def learn():
         schema = LearnSchema()
         payload = schema.load(flask.request.json)
     except mm.ValidationError as err:
-        raise exceptions.InvalidUsage(err)
+        raise exceptions.InvalidUsage(message=err.normalized_messages())
 
     # If an ID is given, then check if any associated features and prediction are stored
     features = payload.get('features')
@@ -122,7 +143,17 @@ def learn():
     # Update the metric
     metrics = shelf['metrics']
     for metric in metrics:
-        metric.update(y_true=payload['ground_truth'], y_pred=prediction)
+        # If the metrics requires labels but prediction is a dict, then we need to retrieve the
+        # predicted label with the highest probability
+        if metric.requires_labels and isinstance(prediction, dict):
+            # At this point prediction is a dict, but it might be empty because no training data
+            # has been seen
+            if len(prediction) == 0:
+                continue
+            pred = max(prediction, key=prediction.get)
+            metric.update(y_true=payload['ground_truth'], y_pred=pred)
+        else:
+            metric.update(y_true=payload['ground_truth'], y_pred=prediction)
     shelf['metrics'] = metrics
 
     msg = json.dumps({
@@ -141,21 +172,6 @@ def learn():
     shelf['model'] = model
 
     return {}, 201
-
-
-@bp.route('/model', methods=['GET', 'POST'])
-def model():
-
-    # POST: set the model
-    if flask.request.method == 'POST':
-        model = dill.loads(flask.request.get_data())
-        db.set_model(model, reset_metrics=flask.request.args.get('reset_metrics', True))
-        return {}, 201
-
-    # GET: return the current model
-    shelf = db.get_shelf()
-    model = shelf['model']
-    return dill.dumps(model)
 
 
 @bp.route('/metrics', methods=['GET'])
