@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <code>chantilly</code> is a deployment tool for <a href="https://www.wikiwand.com/en/Online_machine_learning">online machine learning</a> models. It's designed to work hand in hand with <a href="https://github.com/creme-ml/creme"><code>creme</code></a>.
+  <code>chantilly</code> is a deployment tool for <a href="https://www.wikiwand.com/en/Online_machine_learning">online machine learning</a> models. It is designed to work hand in hand with <a href="https://github.com/creme-ml/creme"><code>creme</code></a>.
 </p>
 
 ## Table of contents
@@ -98,6 +98,19 @@ model = pickle.loads(r.content)
 
 Note that `chantilly` will validate the model you provide to make sure it works with the flavor you picked. For instance, if you picked the `regression` flavor, then the model has to implement `fit_one` and `predict_one`.
 
+You can also add a upload by using the CLI. First, you need to serialize a model and dump it to a file:
+
+```py
+with open('model.pkl', 'wb') as file:
+    dill.dump(model, file)
+```
+
+Then, call the `add-model` sub-command:
+
+```sh
+> chantilly add-model model.pkl
+```
+
 ### Making a prediction
 
 Predictions can be obtained by sending a POST request to `@/api/predict`. The payload you send has to contain a field named `features`. The value of this field will be passed to the `predict_one` method of the model you uploaded earlier on. If the model you provided `predict_proba_one` then that will be used instead. Here is an example:
@@ -145,7 +158,7 @@ requests.post('http://localhost:5000/api/learn', json={
 })
 ```
 
-Note that the `id` field will have precedence in case both of `id` and `features` are provided. We highly recommend you to provide the `id` field.
+Note that the `id` field will have precedence in case both of `id` and `features` are provided. We highly recommend you to use the `id` field. First of all it means that you don't have to take care of storing the features between calls to `@/api/predict` and `@/api/learn`. Secondly it makes the metrics more reliable because they will be using the predictions that were made at the time `@/api/predict` was called.
 
 ### Monitoring metrics
 
@@ -230,6 +243,12 @@ import requests
 model = tree.DecisionTreeClassifier()
 
 requests.post('http://localhost:5000/api/model/barney-stinson', data=dill.dumps(model))
+```
+
+You can also pick a name when you add the model through the CLI:
+
+```sh
+> chantilly add-model model.pkl --name barney-stinson
 ```
 
 You can then choose which model to use when you make a prediction:
