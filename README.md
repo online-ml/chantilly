@@ -12,7 +12,7 @@
 - [Installation](#installation)
 - [User guide](#user-guide)
   - [Running the server](#running-the-server)
-  - [Pick a flavor](#pick-a-flavor)
+  - [Picking a flavor](#picking-a-flavor)
   - [Uploading a model](#uploading-a-model)
   - [Making a prediction](#making-a-prediction)
   - [Updating the model](#updating-the-model)
@@ -45,7 +45,7 @@ Once you've followed the installation step, you'll get access to the `chantilly`
 
 This will start a [Flask](https://flask.palletsprojects.com/en/1.0.x/) server with all the necessary routes for uploading a model, training it, making predictions with it, and monitoring it. By default, the server will be accessible at [`localhost:5000`](http://localhost:5000), which is what we will be using in the rest of the examples in the user guide. You can run `chantilly routes` in order to see all the available routes.
 
-### Pick a flavor
+### Picking a flavor
 
 The first thing you need to do is pick a flavor. Currently, the available flavors are:
 
@@ -200,9 +200,9 @@ messages = sseclient.SSEClient('http://localhost:5000/api/stream/events')
 for msg in messages:
     data = json.loads(msg.data)
     if msg.event == 'learn':
-        print(data['features'], data['prediction'], data['ground_truth'])
+        print(data['model'], data['features'], data['prediction'], data['ground_truth'])
     else:
-        print(data['features'], data['prediction'])
+        print(data['model'], data['features'], data['prediction'])
 ```
 
 In JavaScript, you can you use the [`addEventListener`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener) method:
@@ -276,6 +276,13 @@ requests.post('http://localhost:5000/api/learn', json={
 ```
 
 Note that the data associated with the given `id` is deleted once the model has been updated. In other words you can't call the `@/api/model` with the same `id` twice.
+
+You can view the available models as well as the default model by sending a `GET` request to `@/api/models`:
+
+```py
+r = requests.get('http://localhost:5000/api/models')
+print(r.json())
+```
 
 You can delete a model by sending a `DELETE` request to `@/api/model`:
 

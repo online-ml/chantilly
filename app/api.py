@@ -100,6 +100,13 @@ def model(name=None):
     return dill.dumps(model)
 
 
+@bp.route('/models', methods=['GET'])
+def models():
+    shelf = db.get_shelf()
+    model_names = [k.split('/', 1)[1] for k in shelf if k.startswith('models/')]
+    return {'models': model_names, 'default': shelf.get('default_model_name')}, 200
+
+
 class PredictSchema(mm.Schema):
     features = mm.fields.Dict(required=True)
     id = mm.fields.Raw()  # as long as it can be coerced to a str it's okay

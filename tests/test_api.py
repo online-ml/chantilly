@@ -106,6 +106,16 @@ def test_model_delete(client, app, regression):
         assert 'models/healthy-banana' not in db.get_shelf()
 
 
+def test_models(client, app, regression):
+
+    model = linear_model.LinearRegression()
+    client.post('/api/model/ted-mosby', data=pickle.dumps(model))
+    client.post('/api/model/barney-stinson', data=pickle.dumps(model))
+
+    r = client.get('/api/models')
+    assert r.json == {'default': 'barney-stinson', 'models': ['ted-mosby', 'barney-stinson']}
+
+
 def test_predict_no_model(client, app, regression):
     r = client.post('/api/predict',
         data=json.dumps({'features': {}}),
