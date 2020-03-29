@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <code>chantilly</code> is a tool for deploying <a href="https://www.wikiwand.com/en/Online_machine_learning">online machine learning</a> models built with <a href="https://github.com/creme-ml/creme"><code>creme</code></a>.
+  <code>chantilly</code> is a deployment tool for <a href="https://www.wikiwand.com/en/Online_machine_learning"> models</a>. It's designed to work hand in hand with <a href="https://github.com/creme-ml/creme"><code>creme</code></a>.
 </p>
 
 ## Installation
