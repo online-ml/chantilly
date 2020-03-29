@@ -219,12 +219,12 @@ var es = new EventSource('http://localhost:5000/api/stream/events');
 
 es.addEventListener('learn', = e => {
     var data = JSON.parse(e.data);
-    console.log(data.features, data.prediction, data.ground_truth)
+    console.log(data.model, data.features, data.prediction, data.ground_truth)
 };
 
 es.addEventListener('predict', = e => {
     var data = JSON.parse(e.data);
-    console.log(data.features, data.prediction)
+    console.log(data.model, data.features, data.prediction)
 };
 ```
 
