@@ -23,6 +23,12 @@ def lin_reg(client):
     client.post('/api/model/lin-reg', data=pickle.dumps(linear_model.LinearRegression()))
 
 
+def test_init_no_flavor(client, app):
+    r = client.get('/api/init')
+    assert r.status_code == 400
+    assert r.json == {'message': 'No flavor has been set.'}
+
+
 def test_init_bad_flavor(client, app):
     r = client.post('/api/init',
         data=json.dumps({'flavor': 'zugzug'}),
@@ -41,6 +47,13 @@ def test_init(client, app):
 
     with app.app_context():
         assert db.get_shelf()['flavor'].name == 'regression'
+
+
+def test_model_no_flavor(client, app):
+    model = linear_model.LinearRegression()
+    r = client.post('/api/model', data=pickle.dumps(model))
+    assert r.status_code == 400
+    assert r.json == {'message': 'No flavor has been set.'}
 
 
 class ModelWithoutFit:

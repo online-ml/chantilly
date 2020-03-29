@@ -59,7 +59,7 @@ You can set the flavor by sending a POST request to `@/api/init`, as so:
 import requests
 
 config = {'flavor': 'regression'}
-requests.post('http://localhost:5000/api/model', json=config)
+requests.post('http://localhost:5000/api/init', json=config)
 ```
 
 You can also set the flavor via the CLI:
@@ -69,6 +69,13 @@ You can also set the flavor via the CLI:
 ```
 
 :warning: Setting the flavor will erase everything and thus provide a clean slate.
+
+You can view the current flavor by sending a GET request to `@/api/init`:
+
+```py
+r = requests.post('http://localhost:5000/api/init')
+print(r.json()['flavor'])
+```
 
 ### Uploading a model
 
@@ -277,14 +284,14 @@ requests.post('http://localhost:5000/api/learn', json={
 
 Note that the data associated with the given `id` is deleted once the model has been updated. In other words you can't call the `@/api/model` with the same `id` twice.
 
-You can view the available models as well as the default model by sending a `GET` request to `@/api/models`:
+You can view the available models as well as the default model by sending a GET request to `@/api/models`:
 
 ```py
 r = requests.get('http://localhost:5000/api/models')
 print(r.json())
 ```
 
-You can delete a model by sending a `DELETE` request to `@/api/model`:
+You can delete a model by sending a DELETE request to `@/api/model`:
 
 ```py
 requests.delete('http://localhost:5000/api/model/barney-stinson')

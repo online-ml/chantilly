@@ -16,6 +16,9 @@
       <a href="https://github.com/creme-ml/chantilly">
         <img class="header-image" src="{{ url_for('static', filename='logo.svg') }}" >
       </a>
+      <h2 class="title has-text-centered">
+        👅 [[ config.flavor ? 'Flavor: ' + config.flavor : 'You need to select a flavor' ]]
+      </h2>
     </header>
 
     <main>
@@ -94,6 +97,7 @@
         delimiters: ['[[', ']]'],
         el: '#app',
         data: {
+          config: {},
           metrics: {},
           chartsNames: [],
           charts: {},
@@ -104,11 +108,15 @@
           eventCounter: 0
         },
         mounted: function() {
+          // Get the current flavor
+          const options = {method: 'GET', headers: {'Accept': 'application/json'}};
+          fetch("{{ url_for('api.init') }}", options)
+            .then(r => r.json())
+            .then(config => { this.config = config })
+            .catch(error => console.error(error));
+
+
           // Get the current metrics
-          const options = {
-            method: 'GET',
-            headers: {'Accept': 'application/json'}
-          };
           fetch("{{ url_for('api.metrics') }}", options)
             .then(r => r.json())
             .then(metrics => {
@@ -131,7 +139,6 @@
                 y: value
               });
               this.charts[name].update();
-              //this.charts[name].data.datasets[0].data.push(value);
             }
 
           };
@@ -172,7 +179,8 @@
                   datasets: [{
                     borderColor: '#d5a6bd',
                     pointBackgroundColor: '#d5a6bd',
-                    lineTension: 0,
+                    lineTension: 0.,
+                    pointRadius: 0.,
                     fill: false,
                     data: [{
                       x: moment(),

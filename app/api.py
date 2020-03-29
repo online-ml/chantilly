@@ -48,8 +48,19 @@ class InitSchema(mm.Schema):
     flavor = mm.fields.Str(required=True)
 
 
-@bp.route('/init', methods=['POST'])
+@bp.route('/init', methods=['GET', 'POST'])
 def init():
+
+    # GET: return the current configuration
+    if flask.request.method == 'GET':
+        shelf = db.get_shelf()
+        try:
+            flavor = shelf['flavor']
+        except KeyError:
+            raise exceptions.InvalidUsage(message='No flavor has been set.')
+        return {'flavor': flavor.name}
+
+    # POST: configure chantilly
 
     # Validate the payload
     try:
@@ -86,7 +97,10 @@ def model(name=None):
         model = dill.loads(flask.request.get_data())
 
         # Validate the model
-        flavor = shelf['flavor']
+        try:
+            flavor = shelf['flavor']
+        except KeyError:
+            raise exceptions.InvalidUsage(message='No flavor has been set.')
         ok, error = flavor.check_model(model)
         if not ok:
             raise exceptions.InvalidUsage(message=error)
@@ -228,7 +242,7 @@ def learn():
         flavor = shelf['flavor']
         pred_func = getattr(model, flavor.pred_func)
         try:
-            prediction = pred_func(x=features)
+            prediction = pred_func(x=copy.deepcopy(features))
         except Exception as e:
             raise exceptions.InvalidUsage(message=str(e))
 
@@ -254,7 +268,7 @@ def learn():
 
     # Update the model
     try:
-        model.fit_one(x=features, y=payload['ground_truth'])
+        model.fit_one(x=copy.deepcopy(features), y=payload['ground_truth'])
     except Exception as e:
         raise exceptions.InvalidUsage(message=str(e))
     shelf[f'models/{model_name}'] = model

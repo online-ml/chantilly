@@ -2,7 +2,13 @@
 
 In this example we'll build a model to predict the duration of taxi trips in the city of New-York. To make things realistic, we'll run a simulation where the taxis leave and arrive in the order as given in the dataset. Indeed, we can reproduce a live workload from a historical dataset, therefore producing an environment which is very close to what happens in a production setting.
 
-Before running the simulation, we will run an instance of `chantilly`. For the purpose of this example, we'll assume that chantilly is being served in one command-line session, while we run the rest of the commands in another session.
+We'll be predicting the duration of taxi trips, which is a regression task. We can therefore set the flavor to `regression` via the CLI:
+
+```py
+> chantilly init regression
+```
+
+Before running the simulation, let's start the `chantilly` server. For the purpose of this example, we'll assume that `chantilly` is being served in a command-line session, while we run the rest of the commands in another session.
 
 ```sh
 > chantilly run
@@ -10,7 +16,7 @@ Before running the simulation, we will run an instance of `chantilly`. For the p
 
 Let's now create a model using `creme`. Simply run the following snippet in a Python interpreter.
 
-```python
+```py
 from creme import compose
 from creme import linear_model
 from creme import preprocessing
@@ -50,7 +56,7 @@ The required modules are imported within each function for serialization reasons
 
 We can now upload the model to the `chantilly` instance with an API call, for example via the [`requests`](https://requests.readthedocs.io/en/master/) library. Again, in this example we're assuming that `chantilly` is being ran locally, which means it is accessible at address `http://localhost:5000`.
 
-```python
+```py
 import dill
 import requests
 
@@ -95,4 +101,4 @@ This will produce the following output:
 #0000022 departs at 2016-01-01 00:06:22
 ```
 
-By default the `simulate.py` script will take around 6 months to terminate because that's the time span of the dataset. You can speed up the simulation by running `python simulate.py SPEED_UP` where `SPEED_UP` is the speed up amount (it defaults to 1).
+By default the `simulate.py` script will take around 6 months to terminate because that's the time span of the dataset. You can speed up the simulation by running `python simulate.py SPEED_UP`, where `SPEED_UP` is the speed up amount which defaults to 1.
