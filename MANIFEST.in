@@ -1,1 +1,2 @@
 global-exclude *.pyc
+include app/*.txt
