@@ -73,7 +73,7 @@ You can also set the flavor via the CLI:
 You can view the current flavor by sending a GET request to `@/api/init`:
 
 ```py
-r = requests.post('http://localhost:5000/api/init')
+r = requests.get('http://localhost:5000/api/init')
 print(r.json()['flavor'])
 ```
 
