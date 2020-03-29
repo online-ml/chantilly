@@ -16,7 +16,7 @@ shelve.Pickler = dill.Pickler  # type: ignore
 shelve.Unpickler = dill.Unpickler  # type: ignore
 
 
-def create_app(test_config: dict=None):
+def create_app(test_config: dict = None):
 
     app = flask.Flask('chantilly', instance_relative_config=True)
 

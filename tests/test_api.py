@@ -4,10 +4,8 @@ import pytest
 import uuid
 
 from creme import linear_model
-from creme import tree
 
 from app import db
-from app import exceptions
 
 
 @pytest.fixture
@@ -60,6 +58,7 @@ class ModelWithoutFit:
     def predict_one(self, x):
         return True
 
+
 def test_model_without_fit(client, app, regression):
     r = client.post('/api/model', data=pickle.dumps(ModelWithoutFit()))
     assert r.json == {'message': 'The model does not implement fit_one.'}
@@ -68,6 +67,7 @@ def test_model_without_fit(client, app, regression):
 class ModelWithoutPredict:
     def fit_one(self, x, y):
         return self
+
 
 def test_model_without_predict(client, app, regression):
     r = client.post('/api/model', data=pickle.dumps(ModelWithoutPredict()))

@@ -2,7 +2,6 @@ import contextlib
 import os
 import random
 import shelve
-import typing
 
 import creme.base
 import creme.metrics
@@ -66,7 +65,7 @@ def add_model(model: creme.base.Estimator, name: str = None) -> str:
     # Pick a name if none is given
     if name is None:
         while True:
-            name = _random_name()
+            name = _random_slug()
             if f'models/{name}' not in shelf:
                 break
 
@@ -80,8 +79,15 @@ def delete_model(name: str):
     del shelf['models/{name}']
 
 
-def _random_name(rng=random) -> str:
+def _random_slug(rng=random) -> str:
+    """
+
+    >>> rng = random.Random(42)
+    >>> _random_slug(rng)
+    'earsplitting-apricot'
+
+    """
     here = os.path.dirname(os.path.realpath(__file__))
-    adj = rng.choice(list(open(os.path.join(here, 'adjectives.txt'))))
-    name = rng.choice(list(open(os.path.join(here, 'food_names.txt'))))
-    return f'{adj}-{name}'
+
+    with open(os.path.join(here, 'adjectives.txt')) as f, open(os.path.join(here, 'food_names.txt')) as g:
+        return f'{rng.choice(f.read().splitlines())}-{rng.choice(g.read().splitlines())}'

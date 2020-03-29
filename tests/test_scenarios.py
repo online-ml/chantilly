@@ -4,7 +4,6 @@ import pickle
 
 from creme import datasets
 from creme import linear_model
-from creme import metrics
 from creme import preprocessing
 
 
@@ -22,6 +21,7 @@ def test_phishing(client, app):
             data=json.dumps({'id': i, 'features': x}),
             content_type='application/json'
         )
+
         client.post('/api/learn',
             data=json.dumps({'id': i, 'ground_truth': y}),
             content_type='application/json'

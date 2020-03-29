@@ -11,7 +11,8 @@ def allowed_flavors():
 class Flavor(abc.ABC):
 
     @abc.abstractproperty
-    def name(self): pass
+    def name(self):
+        pass
 
     @abc.abstractmethod
     def check_model(self, model: typing.Any) -> typing.Tuple[bool, str]:

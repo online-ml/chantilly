@@ -2,8 +2,6 @@ import copy
 import json
 import queue
 
-import creme.base
-import creme.utils.estimator_checks
 from creme.metrics.base import ClassificationMetric
 import dill
 import flask
@@ -33,7 +31,9 @@ class MessageAnnouncer:
             except queue.Full:
                 del self.listeners[i]
 
+
 METRICS_ANNOUNCER = MessageAnnouncer()
+
 EVENTS_ANNOUNCER = MessageAnnouncer()
 
 

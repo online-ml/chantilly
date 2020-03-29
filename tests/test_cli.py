@@ -3,7 +3,6 @@ import os
 import uuid
 
 from creme import linear_model
-from flask import g
 
 from app import db
 from app import cli
