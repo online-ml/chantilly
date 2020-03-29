@@ -6,6 +6,27 @@
   <code>chantilly</code> is a tool for deploying <a href="https://www.wikiwand.com/en/Online_machine_learning">online machine learning</a> models built with <a href="https://github.com/creme-ml/creme"><code>creme</code></a>.
 </p>
 
+## Table of contents
+
+- [Table of contents](#table-of-contents)
+- [Installation](#installation)
+- [User guide](#user-guide)
+  - [Running the server](#running-the-server)
+  - [Pick a flavor](#pick-a-flavor)
+  - [Uploading a model](#uploading-a-model)
+  - [Making a prediction](#making-a-prediction)
+  - [Updating the model](#updating-the-model)
+  - [Monitoring metrics](#monitoring-metrics)
+  - [Monitoring events](#monitoring-events)
+  - [Visual monitoring](#visual-monitoring)
+  - [Using multiple models](#using-multiple-models)
+  - [Deployment](#deployment)
+- [Examples](#examples)
+- [Development](#development)
+- [Roadmap](#roadmap)
+- [Technical stack](#technical-stack)
+- [Similar alternatives](#similar-alternatives)
+
 ## Installation
 
 ```sh
@@ -24,9 +45,34 @@ Once you've followed the installation step, you'll get access to the `chantilly`
 
 This will start a [Flask](https://flask.palletsprojects.com/en/1.0.x/) server with all the necessary routes for uploading a model, training it, making predictions with it, and monitoring it. By default, the server will be accessible at [`localhost:5000`](http://localhost:5000), which is what we will be using in the rest of the examples in the user guide. You can run `chantilly routes` in order to see all the available routes.
 
+### Pick a flavor
+
+The first thing you need to do is pick a flavor. Currently, the available flavors are:
+
+- `regression` for regression tasks.
+- `binary` for binary classification tasks.
+- `multiclass` for multi-class classification tasks.
+
+You can set the flavor by sending a POST request to `@/api/init`, as so:
+
+```py
+import requests
+
+config = {'flavor': 'regression'}
+requests.post('http://localhost:5000/api/model', json=config)
+```
+
+You can also set the flavor via the CLI:
+
+```py
+> chantilly init regression
+```
+
+:warning: Setting the flavor will erase everything and thus provide a clean slate.
+
 ### Uploading a model
 
-You can upload a `creme` model by sending a POST request to the `@/api/model` route. Because `chantilly` uses [`dill`](https://github.com/uqfoundation/dill) for serialization, you'll have to use that too. For instance:
+You can upload a model by sending a POST request to the `@/api/model` route. You need to provide a model which has been serialized with [`pickle`](https://docs.python.org/3/library/pickle.html) or [`dill`](https://dill.readthedocs.io/en/latest/dill.html) (we recommend the latter). For example:
 
 ```py
 from creme import compose
@@ -50,13 +96,15 @@ r = requests.get('http://localhost:5000/api/model')
 model = pickle.loads(r.content)
 ```
 
-Note that `chantilly` only supports models that implement `fit_one` and either one of `predict_one` and `predict_proba_one`.
+Note that `chantilly` will validate the model you provide to make sure it works with the flavor you picked. For instance, if you picked the `regression` flavor, then the model has to implement `fit_one` and `predict_one`.
 
 ### Making a prediction
 
 Predictions can be obtained by sending a POST request to `@/api/predict`. The payload you send has to contain a field named `features`. The value of this field will be passed to the `predict_one` method of the model you uploaded earlier on. If the model you provided `predict_proba_one` then that will be used instead. Here is an example:
 
 ```py
+import requests
+
 r = requests.post('http://localhost:5000/api/predict', json={
     'id': 42,
     'features': {
@@ -76,6 +124,8 @@ Note that in the previous snippet we've also provided an `id` field. This field 
 The model can be updated by sending a POST request to `@/api/learn`. If you've provided an ID in an earlier call to `@/api/predict`, then you only have to provide said ID along with the ground truth:
 
 ```py
+import requests
+
 requests.post('http://localhost:5000/api/learn', json={
     'id': 42,
     'ground_truth': 10.21
@@ -95,7 +145,7 @@ requests.post('http://localhost:5000/api/learn', json={
 })
 ```
 
-Note that the `id` field will have precedence in case both of `id` and `features` are provided.
+Note that the `id` field will have precedence in case both of `id` and `features` are provided. We highly recommend you to provide the `id` field.
 
 ### Monitoring metrics
 
@@ -167,6 +217,52 @@ A live dashboard is accessible if you navigate to [`localhost:5000`](http://loca
 </p>
 
 Under the hood the dashboard is simply listening to the API's streaming routes.
+
+### Using multiple models
+
+You can use different models by giving them names. You can provide a name to a model by adding a suffix to `@/api/model`:
+
+```py
+from creme import tree
+import dill
+import requests
+
+model = tree.DecisionTreeClassifier()
+
+requests.post('http://localhost:5000/api/model/barney-stinson', data=dill.dumps(model))
+```
+
+You can then choose which model to use when you make a prediction:
+
+```py
+r = requests.post('http://localhost:5000/api/predict', json={
+    'id': 42,
+    'features': {
+        'shop': 'Ikea',
+        'item': 'Dombäs',
+        'date': '2020-03-22T10:42:29Z'
+    },
+    'model': 'barney-stinson'
+})
+```
+
+The model which was provided last will be used by default if the `model` field is not specified. If you provide an `id`, then the model which was used for making the prediction will be the one that is updated once the ground truth is made available. You can also specify which model to update directly as so:
+
+```py
+requests.post('http://localhost:5000/api/learn', json={
+    'id': 42,
+    'ground_truth': 10.21,
+    'model': 'barney-stinson'
+})
+```
+
+Note that the data associated with the given `id` is deleted once the model has been updated. In other words you can't call the `@/api/model` with the same `id` twice.
+
+You can delete a model by sending a `DELETE` request to `@/api/model`:
+
+```py
+requests.delete('http://localhost:5000/api/model/barney-stinson')
+```
 
 ### Deployment
 

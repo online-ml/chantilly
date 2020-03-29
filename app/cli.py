@@ -9,6 +9,7 @@ from . import db
 
 @click.command('init', short_help='set the flavor')
 @click.argument('flavor')
+@flask.cli.with_appcontext
 def init(flavor):
     """Sets the flavor of chantilly.
 
@@ -21,6 +22,7 @@ def init(flavor):
 @click.command('add-model', short_help='add a model')
 @click.argument('path', type=click.File('rb'))
 @click.option('--name', type=str, default=None)
+@flask.cli.with_appcontext
 def add_model(path, name):
     """Stores a pickled/dilled model.
 
@@ -33,6 +35,7 @@ def add_model(path, name):
 
 @click.command('delete-model', short_help='delete a model')
 @click.argument('name', type=str)
+@flask.cli.with_appcontext
 def delete_model(name):
     db.delete_model(name)
     click.echo(f'{name} has been deleted')

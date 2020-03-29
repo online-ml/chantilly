@@ -4,6 +4,7 @@ import queue
 
 import creme.base
 import creme.utils.estimator_checks
+from creme.metrics.base import ClassificationMetric
 import dill
 import flask
 import marshmallow as mm
@@ -67,26 +68,42 @@ def init():
 
 
 @bp.route('/model', methods=['GET', 'POST'])
-def model():
+@bp.route('/model/<name>', methods=['GET', 'POST', 'DELETE'])
+def model(name=None):
+
+    shelf = db.get_shelf()
+
+    # DELETE: drop the model
+    if flask.request.method == 'DELETE':
+        key = f'models/{name}'
+        if key not in shelf:
+            return {}, 404
+        del shelf[key]
+        return {}, 204
 
     # POST: set the model
     if flask.request.method == 'POST':
         model = dill.loads(flask.request.get_data())
-        try:
-            db.set_model(model, reset_metrics=flask.request.args.get('reset_metrics', True))
-        except ValueError as err:
-            raise exceptions.InvalidUsage(message=str(err))
-        return {}, 201
+
+        # Validate the model
+        flavor = shelf['flavor']
+        ok, error = flavor.check_model(model)
+        if not ok:
+            raise exceptions.InvalidUsage(message=error)
+        name = db.add_model(model, name=name)
+        shelf['default_model_name'] = name  # the most recent model becomes the default
+        return {'name': name}, 201
 
     # GET: return the current model
-    shelf = db.get_shelf()
-    model = shelf['model']
+    name = shelf['default_model_name'] if name is None else name
+    model = shelf[f'models/{name}']
     return dill.dumps(model)
 
 
 class PredictSchema(mm.Schema):
     features = mm.fields.Dict(required=True)
     id = mm.fields.Raw()  # as long as it can be coerced to a str it's okay
+    model = mm.fields.Str()
 
 
 @bp.route('/predict', methods=['POST'])
@@ -102,34 +119,54 @@ def predict():
     # Load the model
     shelf = db.get_shelf()
     try:
-        model = shelf['model']
+        default_model_name = shelf['default_model_name']
     except KeyError:
-        raise exceptions.InvalidUsage(message='You first need to provide a model.')
+        raise exceptions.InvalidUsage(message='No default model has been set.')
+    model_name = payload.get('model', default_model_name)
+    try:
+        model = shelf[f'models/{model_name}']
+    except KeyError:
+        raise exceptions.InvalidUsage(message=f"No model named '{model_name}'.")
 
-    # We make a copy because the model might modify the features in-place
+    # We make a copy because the model might modify the features in-place while we want to be able
+    # to store an identical copy
     features = copy.deepcopy(payload['features'])
 
     # Make the prediction
-    if hasattr(creme.utils.estimator_checks.guess_model(model), 'predict_proba_one'):
-        pred = model.predict_proba_one(x=features)
-    else:
-        pred = model.predict_one(x=features)
+    flavor = shelf['flavor']
+    pred_func = getattr(model, flavor.pred_func)
+    try:
+        pred = pred_func(x=features)
+    except Exception as e:
+        raise exceptions.InvalidUsage(message=str(e))
+
+    # The unsupervised parts of the model might be updated after a prediction, so we need to store
+    # it
+    shelf[f'models/{model_name}'] = model
 
     # Announce the prediction
-    msg = json.dumps({'features': payload['features'], 'prediction': pred})
-    EVENTS_ANNOUNCER.announce(format_sse(data=msg, event='predict'))
+    if EVENTS_ANNOUNCER.listeners:
+        EVENTS_ANNOUNCER.announce(format_sse(
+            data=json.dumps({
+                'model': model_name,
+                'features': payload['features'],
+                'prediction': pred
+            }),
+            event='predict'
+        ))
 
     # If an ID is provided, then we store the features in order to be able to use them for learning
     # further down the line.
     status_code = 200
     if 'id' in payload:
         shelf['#%s' % payload['id']] = {
+            'model': model_name,
             'features': payload['features'],
             'prediction': pred
         }
         status_code = 201
 
-    return {'prediction': pred}, status_code
+    return {'model': model_name, 'prediction': pred}, status_code
 
 
 class LearnSchema(mm.Schema):
@@ -148,35 +185,56 @@ def learn():
     except mm.ValidationError as err:
         raise exceptions.InvalidUsage(message=err.normalized_messages())
 
-    # Load the model
+    # If an ID is given, then retrieve the stored info.
     shelf = db.get_shelf()
     try:
-        model = shelf['model']
+        memory = shelf['#%s' % payload['id']] if 'id' in payload else {}
     except KeyError:
-        raise exceptions.InvalidUsage(message='You first need to provide a model.')
+        raise exceptions.InvalidUsage(message=f"No information stored for ID '{payload['id']}'.")
+    model_name = memory.get('model')
+    features = memory.get('features')
+    prediction = memory.get('prediction')
 
-    # If an ID is given, then check if any associated features and prediction are stored
-    features = payload.get('features')
-    prediction = None
-    if 'id' in payload:
-        memory = shelf.get('#%s' % payload['id'], {})
-        features = memory.get('features')
-        prediction = memory.get('prediction')
+    # Override with the information provided in the request
+    model_name = payload.get('model', model_name)
+    features = payload.get('features', features)
+    prediction = payload.get('prediction', prediction)
+
+    # Load the model
+    if model_name is None:
+        try:
+            default_model_name = shelf['default_model_name']
+        except KeyError:
+            raise exceptions.InvalidUsage(message='No default model has been set.')
+        model_name = default_model_name
+    try:
+        model = shelf[f'models/{model_name}']
+    except KeyError:
+        raise exceptions.InvalidUsage(message=f"No model named '{model_name}'.")
 
     # Raise an error if no features are provided
     if features is None:
-        raise exceptions.InvalidUsage('No features are stored and none were provided.')
+        raise exceptions.InvalidUsage(message='No features are stored and none were provided.')
 
     # Obtain a prediction if none was made earlier
     if prediction is None:
-        prediction = model.predict_proba_one(features)
+        flavor = shelf['flavor']
+        pred_func = getattr(model, flavor.pred_func)
+        try:
+            prediction = pred_func(x=features)
+        except Exception as e:
+            raise exceptions.InvalidUsage(message=str(e))
 
-    # Update the metric
+    # Update the metrics
     metrics = shelf['metrics']
     for metric in metrics:
-        # If the metrics requires labels but prediction is a dict, then we need to retrieve the
+        # If the metrics requires labels but the prediction is a dict, then we need to retrieve the
         # predicted label with the highest probability
-        if metric.requires_labels and isinstance(prediction, dict):
+        if (
+            isinstance(metric, ClassificationMetric) and
+            metric.requires_labels and
+            isinstance(prediction, dict)
+        ):
             # At this point prediction is a dict, but it might be empty because no training data
             # has been seen
             if len(prediction) == 0:
@@ -187,20 +245,29 @@ def learn():
             metric.update(y_true=payload['ground_truth'], y_pred=prediction)
     shelf['metrics'] = metrics
 
-    msg = json.dumps({
-        'features': features,
-        'prediction': prediction,
-        'ground_truth': payload['ground_truth']
-    })
-    EVENTS_ANNOUNCER.announce(format_sse(data=msg, event='learn'))
+    # Update the model
+    try:
+        model.fit_one(x=features, y=payload['ground_truth'])
+    except Exception as e:
+        raise exceptions.InvalidUsage(message=str(e))
+    shelf[f'models/{model_name}'] = model
+
+    # Announce the event
+    if EVENTS_ANNOUNCER.listeners:
+        EVENTS_ANNOUNCER.announce(format_sse(
+            data=json.dumps({
+                'model': model_name,
+                'features': features,
+                'prediction': prediction,
+                'ground_truth': payload['ground_truth']
+            }),
+            event='learn'
+        ))
 
     # Announce the current metric values
-    msg = json.dumps({metric.__class__.__name__: metric.get() for metric in metrics})
-    METRICS_ANNOUNCER.announce(format_sse(data=msg))
-
-    # Update the model
-    model.fit_one(x=features, y=payload['ground_truth'])
-    shelf['model'] = model
+    if METRICS_ANNOUNCER.listeners:
+        msg = json.dumps({metric.__class__.__name__: metric.get() for metric in metrics})
+        METRICS_ANNOUNCER.announce(format_sse(data=msg))
 
     # Delete the payload from the shelf
     if 'id' in payload:
