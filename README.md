@@ -3,6 +3,29 @@
 </p>
 
 <p align="center">
+  <!-- Travis -->
+  <a href="https://travis-ci.org/creme-ml/chantilly">
+    <img src="https://img.shields.io/travis/creme-ml/chantilly/master.svg?style=flat-square" alt="travis">
+  </a>
+  <!-- Codecov -->
+  <a href="https://codecov.io/gh/creme-ml/chantilly">
+    <img src="https://img.shields.io/codecov/c/gh/creme-ml/chantilly.svg?style=flat-square" alt="codecov">
+  </a>
+  <!-- Gitter -->
+  <a href="https://gitter.im/creme-ml/community?utm_source=share-link&utm_medium=link&utm_campaign=share-link">
+    <img src="https://img.shields.io/gitter/room/creme-ml/community?color=blueviolet&style=flat-square" alt="gitter">
+  </a>
+  <!-- PyPI -->
+  <!-- <a href="https://pypi.org/project/chantilly">
+    <img src="https://img.shields.io/pypi/v/chantilly.svg?label=release&color=blue&style=flat-square" alt="pypi">
+  </a> -->
+  <!-- License -->
+  <a href="https://opensource.org/licenses/BSD-3-Clause">
+    <img src="https://img.shields.io/badge/License-BSD%203--Clause-blue.svg?style=flat-square" alt="bsd_3_license">
+  </a>
+</p>
+
+<p align="center">
   <code>chantilly</code> is a deployment tool for <a href="https://www.wikiwand.com/en/Online_machine_learning">online machine learning</a> models. It is designed to work hand in hand with <a href="https://github.com/creme-ml/creme"><code>creme</code></a>.
 </p>
 
@@ -27,6 +50,7 @@
 - [Roadmap](#roadmap)
 - [Technical stack](#technical-stack)
 - [Similar alternatives](#similar-alternatives)
+- [License](#license)
 
 ## Installation
 
@@ -371,3 +395,7 @@ Most machine learning deployment tools only support making predictions with a tr
 
 - [Cortex](https://github.com/cortexlabs/cortex)
 - [Clipper](https://github.com/ucbrise/clipper)
+
+## License
+
+`creme` is free and open-source software licensed under the [3-clause BSD license](https://github.com/creme-ml/creme/blob/master/LICENSE).

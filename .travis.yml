@@ -17,6 +17,7 @@ install: pip install ".[dev]" codecov
 script: make test && codecov
 
 jobs:
+  include:
 
   - stage: pypi
     services:
