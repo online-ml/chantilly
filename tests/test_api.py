@@ -3,7 +3,11 @@ import pickle
 import pytest
 import uuid
 
+from creme import datasets
 from creme import linear_model
+from creme import preprocessing
+import flask
+import sseclient
 
 from app import db
 
@@ -18,7 +22,8 @@ def regression(client):
 
 @pytest.fixture
 def lin_reg(client):
-    client.post('/api/model/lin-reg', data=pickle.dumps(linear_model.LinearRegression()))
+    model = preprocessing.StandardScaler() | linear_model.LinearRegression()
+    client.post('/api/model/lin-reg', data=pickle.dumps(model))
 
 
 def test_init_no_flavor(client, app):
@@ -45,6 +50,8 @@ def test_init(client, app):
 
     with app.app_context():
         assert db.get_shelf()['flavor'].name == 'regression'
+
+    assert client.get('/api/init').json == {'flavor': 'regression'}
 
 
 def test_model_no_flavor(client, app):
@@ -103,7 +110,11 @@ def test_model_upload(client, app, regression):
     assert model.probe == probe
 
 
-def test_model_delete(client, app, regression):
+def test_delete_unknown_model(client, app, regression):
+    assert client.delete('/api/model/kayser-soze').status_code == 404
+
+
+def test_delete_model(client, app, regression):
 
     # Upload a model
     model = linear_model.LinearRegression()

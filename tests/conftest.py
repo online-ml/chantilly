@@ -10,8 +10,7 @@ def app():
 
     app = create_app({
         'TESTING': True,
-        'SHELVE_PATH': str(uuid.uuid4()),
-        'API_ONLY': True
+        'SHELVE_PATH': str(uuid.uuid4())
     })
 
     yield app

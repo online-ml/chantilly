@@ -9,7 +9,7 @@ setup(
     install_requires=[
         'creme>=0.5.0',
         'dill>=0.3.1.1',
-        'flask>=1.1.1',
+        'Flask>=1.1.1',
         'marshmallow>=3.5.1'
     ],
     extras_require={
