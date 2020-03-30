@@ -20,6 +20,7 @@
   - [Monitoring events](#monitoring-events)
   - [Visual monitoring](#visual-monitoring)
   - [Using multiple models](#using-multiple-models)
+  - [Configuration handling](#configuration-handling)
   - [Deployment](#deployment)
 - [Examples](#examples)
 - [Development](#development)
@@ -295,6 +296,39 @@ You can delete a model by sending a DELETE request to `@/api/model`:
 
 ```py
 requests.delete('http://localhost:5000/api/model/barney-stinson')
+```
+
+### Configuration handling
+
+`chantilly` follows Flask's [instance folder](https://flask.palletsprojects.com/en/1.1.x/config/#instance-folders) pattern. This means that you can configure `chantilly` via a file named `instance/config.py`. Note that the location is relative to where you are launching the `chantilly run` command from. You can set all the [builtin variables](https://flask.palletsprojects.com/en/1.1.x/config/#builtin-configuration-values) that Flask provides. You can also set the following variables which are specific to `chantilly`:
+
+- `SHELVE_PATH`: location of the [shelve](https://docs.python.org/3/library/shelve.html) database file.
+
+The `instance/config.py` is a Python file that gets executed before the app starts, therefore this is also where you can [configure logging](https://flask.palletsprojects.com/en/1.1.x/logging/).
+
+Here is an example `instance/config.py` file:
+
+```py
+from logging.config import dictConfig
+
+dictConfig({
+    'version': 1,
+    'formatters': {'default': {
+        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+    }},
+    'handlers': {'wsgi': {
+        'class': 'logging.FileHandler',
+        'filename': '/var/log/chantilly/error.log',
+        'formatter': 'default'
+    }},
+    'root': {
+        'level': 'INFO',
+        'handlers': ['wsgi']
+    }
+})
+
+SECRET_KEY = 'keep_it_secret_keep_it_safe'
+SHELVE_PATH = '/usr/local/chantilly'
 ```
 
 ### Deployment
