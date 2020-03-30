@@ -13,7 +13,7 @@ cache:
     - $HOME/.cache/pip
     - $HOME/downloads
 
-install: pip install ".[ci]" codecov
+install: pip install ".[dev]" codecov
 script: make test && codecov
 
 jobs:
