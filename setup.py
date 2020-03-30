@@ -16,7 +16,8 @@ setup(
         'dev': [
             'flake8>=3.7.9',
             'mypy>=0.770',
-            'pytest>=5.3.5'
+            'pytest>=5.3.5',
+            'pytest-cov>=2.8.1'
         ]
     },
     entry_points={
