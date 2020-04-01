@@ -44,6 +44,7 @@
   - [Visual monitoring](#visual-monitoring)
   - [Using multiple models](#using-multiple-models)
   - [Configuration handling](#configuration-handling)
+  - [Using external libraries](#using-external-libraries)
   - [Deployment](#deployment)
 - [Examples](#examples)
 - [Development](#development)
@@ -354,6 +355,36 @@ dictConfig({
 SECRET_KEY = 'keep_it_secret_keep_it_safe'
 SHELVE_PATH = '/usr/local/chantilly'
 ```
+
+### Using external libraries
+
+It's highly likely that your model will be using external dependencies. A prime example is the [`datetime`](https://docs.python.org/3/library/datetime.html) module, which you'll probably want to use to parse datetime strings. Instead of specifying which libraries you want `chantilly` to import, the current practice is to import your requirements *within* your model. For instance, here is an excerpt taken from the [New-York city taxi trips example](examples/taxis):
+
+```py
+from creme import compose
+from creme import linear_model
+from creme import preprocessing
+
+def parse(trip):
+    import datetime as dt
+    trip['pickup_datetime'] = dt.datetime.fromisoformat(trip['pickup_datetime'])
+    return trip
+
+def datetime_info(trip):
+    import calendar
+    day_no = trip['pickup_datetime'].weekday()
+    return {
+        'hour': trip['pickup_datetime'].hour,
+        **{day: i == day_no for i, day in enumerate(calendar.day_name)}
+    }
+
+model = compose.FuncTransformer(parse)
+model |= compose.FuncTransformer(datetime_info)
+model |= preprocessing.StandardScaler()
+model |= linear_model.LinearRegression()
+```
+
+Note that you need to make sure that the Python interpreter you're running `chantilly` with has access to the libraries you want to use.
 
 ### Deployment
 

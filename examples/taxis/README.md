@@ -40,9 +40,10 @@ def distances(trip):
 
 def datetime_info(trip):
     import calendar
+    day_no = trip['pickup_datetime'].weekday()
     return {
-        calendar.day_name[trip['pickup_datetime'].weekday()]: True,
-        'hour': trip['pickup_datetime'].hour
+        'hour': trip['pickup_datetime'].hour,
+        **{day: i == day_no for i, day in enumerate(calendar.day_name)}
     }
 
 
