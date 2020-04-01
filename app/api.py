@@ -200,6 +200,7 @@ class LearnSchema(mm.Schema):
     features = mm.fields.Dict()
     id = mm.fields.Raw()
     ground_truth = mm.fields.Raw(required=True)
+    model = mm.fields.Str()
 
 
 @bp.route('/learn', methods=['POST'])

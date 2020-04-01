@@ -7,7 +7,6 @@ from creme import datasets
 from creme import linear_model
 from creme import preprocessing
 import flask
-import sseclient
 
 from app import db
 
@@ -187,6 +186,15 @@ def test_predict_with_id(client, app, regression, lin_reg):
         assert '#90210' in shelf
 
 
+def test_predict_model_name(client, app, regression, lin_reg):
+    r = client.post('/api/predict',
+        data=json.dumps({'features': {}, 'model': 'lin-reg'}),
+        content_type='application/json'
+    )
+    assert r.status_code == 200
+    assert r.json == {'model': 'lin-reg', 'prediction': 0.0}
+
+
 def test_learn_no_ground_truth(client, app, regression, lin_reg):
     r = client.post('/api/learn',
         data=json.dumps({'features': {'x': 1}}),
@@ -252,3 +260,11 @@ def test_learn_unknown_id(client, app, regression, lin_reg):
     )
     assert r.status_code == 400
     assert r.json == {'message': "No information stored for ID '42'."}
+
+
+def test_learn_model_name(client, app, regression, lin_reg):
+    r = client.post('/api/learn',
+        data=json.dumps({'features': {}, 'ground_truth': 7, 'model': 'lin-reg'}),
+        content_type='application/json'
+    )
+    assert r.status_code == 201
