@@ -32,6 +32,7 @@
 ## Table of contents
 
 - [Table of contents](#table-of-contents)
+- [Introduction](#introduction)
 - [Installation](#installation)
 - [User guide](#user-guide)
   - [Running the server](#running-the-server)
@@ -52,6 +53,19 @@
 - [Technical stack](#technical-stack)
 - [Similar alternatives](#similar-alternatives)
 - [License](#license)
+
+## Introduction
+
+There are many tools for deploying machine learning models. However, none of them support online models that can learn on the fly. `chantilly`does.
+
+Here are some advantages:
+
+- **Simple**: `chantilly` is essentially just a Flask app.
+- **Straightforward**: you provide a model, `chantilly` a few API routes to do the rest.
+- **Convenient**: `chantilly` rids you of the burden of storing features between prediction and learning steps.
+- **Flexible**: use any model you wish, as long as it's written in Python and implements a couple of required methods.
+
+Note that `chantilly` is very young, and is therefore subject to evolve. We're also eager for feedback and are happy to work hand in hand with you if you have specific needs.
 
 ## Installation
 
