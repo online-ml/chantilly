@@ -213,20 +213,24 @@ def learn():
     except mm.ValidationError as err:
         raise exceptions.InvalidUsage(message=err.normalized_messages())
 
+    # Override with the information provided in the request
+    model_name = payload.get('model')
+    features = payload.get('features')
+    prediction = payload.get('prediction')
+
     # If an ID is given, then retrieve the stored info.
     shelf = db.get_shelf()
     try:
         memory = shelf['#%s' % payload['id']] if 'id' in payload else {}
     except KeyError:
         raise exceptions.InvalidUsage(message=f"No information stored for ID '{payload['id']}'.")
-    model_name = memory.get('model')
-    features = memory.get('features')
-    prediction = memory.get('prediction')
+    model_name = memory.get('model', model_name)
+    features = memory.get('features', features)
+    prediction = memory.get('prediction', prediction)
 
-    # Override with the information provided in the request
-    model_name = payload.get('model', model_name)
-    features = payload.get('features', features)
-    prediction = payload.get('prediction', prediction)
+    # Raise an error if no features are provided
+    if features is None:
+        raise exceptions.InvalidUsage(message='No features are stored and none were provided.')
 
     # Load the model
     if model_name is None:
@@ -239,10 +243,6 @@ def learn():
         model = shelf[f'models/{model_name}']
     except KeyError:
         raise exceptions.InvalidUsage(message=f"No model named '{model_name}'.")
-
-    # Raise an error if no features are provided
-    if features is None:
-        raise exceptions.InvalidUsage(message='No features are stored and none were provided.')
 
     # Obtain a prediction if none was made earlier
     if prediction is None:

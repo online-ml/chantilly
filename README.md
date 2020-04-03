@@ -61,7 +61,7 @@ There are many tools for deploying machine learning models. However, none of the
 Here are some advantages:
 
 - **Simple**: `chantilly` is essentially just a Flask app.
-- **Straightforward**: you provide a model, `chantilly` a few API routes to do the rest.
+- **Straightforward**: you provide a model, `chantilly` provides a few API routes to do the rest.
 - **Convenient**: `chantilly` rids you of the burden of storing features between prediction and learning steps.
 - **Flexible**: use any model you wish, as long as it's written in Python and implements a couple of required methods.
 
