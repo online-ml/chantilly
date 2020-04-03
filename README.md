@@ -317,7 +317,7 @@ Here is an output example:
 
 The `mean_duration` fields contain the average duration of each endpoint. The `ewm_duration` fields contain an [exponential moving average](https://www.wikiwand.com/en/Moving_average#/Exponential_moving_average) of said duration, and therefore gives you an idea of the recent performance, which can allow you to detect issues. Note that these durations do not include the time it takes to transmit the response over the network.
 
-These statistic are voluntarily very plain. They're only purpose is to provide a quick healthcheck. The proper way to monitor a web application's performance, including a Flask app, is to use purpose-built tools. For instance you could use [Loki](https://github.com/grafana/loki) to monitor the application logs and [Grafana](https://grafana.com/) to visualize and analyze them.
+These statistic are voluntarily very plain. Their only purpose is to provide a quick healthcheck. The proper way to monitor a web application's performance, including a Flask app, is to use purpose-built tools. For instance you could use [Loki](https://github.com/grafana/loki) to monitor the application logs and [Grafana](https://grafana.com/) to visualize and analyze them.
 
 ### Using multiple models
 
