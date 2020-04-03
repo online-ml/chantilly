@@ -1,10 +1,10 @@
 import os
+import shelve
 
 import click
 import dill
 import flask
 import flask.cli
-import shelve
 
 from . import db
 from . import cli

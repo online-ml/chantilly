@@ -5,6 +5,7 @@ import shelve
 
 import creme.base
 import creme.metrics
+import creme.stats
 import creme.utils
 import flask
 
@@ -44,10 +45,20 @@ def set_flavor(flavor: str):
     shelf = get_shelf()
     shelf['flavor'] = flavor
 
-    reset_metrics()
+    init_metrics()
+    init_stats()
 
 
-def reset_metrics():
+def init_stats():
+    shelf = get_shelf()
+    shelf['stats'] = {
+        'learn_mean': creme.stats.Mean(),
+        'learn_ewm': creme.stats.EWMean(.3),
+        'predict_mean': creme.stats.Mean(),
+        'predict_ewm': creme.stats.EWMean(.3),
+    }
+
+def init_metrics():
 
     shelf = get_shelf()
     try:

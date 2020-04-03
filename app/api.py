@@ -1,6 +1,7 @@
 import copy
 import json
 import queue
+import time
 
 from creme.metrics.base import ClassificationMetric
 import dill
@@ -48,6 +49,33 @@ def format_sse(data: str, event=None) -> str:
     if event is not None:
         msg = f'event: {event}\n{msg}'
     return msg
+
+
+@bp.before_request
+def before_request_func():
+    if flask.request.endpoint in ('api.learn', 'api.predict'):
+        flask.request.started_at = time.perf_counter_ns()
+
+
+@bp.after_request
+def after_request_func(response):
+
+    if flask.request.endpoint not in ('api.learn', 'api.predict'):
+        return response
+
+    duration = time.perf_counter_ns() - flask.request.started_at
+    shelf = db.get_shelf()
+    stats = shelf['stats']
+
+    if flask.request.endpoint == 'api.learn':
+        stats['learn_mean'].update(duration)
+        stats['learn_ewm'].update(duration)
+    elif flask.request.endpoint == 'api.predict':
+        stats['predict_mean'].update(duration)
+        stats['predict_ewm'].update(duration)
+
+    shelf['stats'] = stats
+    return response
 
 
 class InitSchema(mm.Schema):
@@ -331,3 +359,51 @@ def stream_events():
             event = messages.get()  # blocks until a new message arrives
             yield event
     return flask.Response(stream(), mimetype='text/event-stream')
+
+
+def humanize_ns(ns: int) -> str:
+
+    if ns == 0:
+        return '0ns'
+
+    μs = ('μs', 1000)
+    ms = ('ms', μs[1] * 1000)
+    s  = ('s',  ms[1] * 1000)
+    m  = ('m',   s[1] * 60)
+
+    rep = ''
+
+    for d in (m, s, ms, μs):
+        k, ns = divmod(ns, d[1])
+        if k:
+            rep += f'{k}{d[0]}'
+
+    if ns:
+        rep += f'{ns}ns'
+
+    return rep
+
+
+@bp.route('/stats', methods=['GET'])
+def stats():
+    shelf = db.get_shelf()
+    try:
+        stats = shelf['stats']
+    except KeyError:
+        raise exceptions.InvalidUsage(message='No flavor has been set.')
+    return {
+        'predict': {
+            'n_calls': int(stats['predict_mean'].n),
+            'mean_duration': int(stats['predict_mean'].get()),
+            'mean_duration_human': humanize_ns(int(stats['predict_mean'].get())),
+            'ewm_duration': int(stats['predict_ewm'].get()),
+            'ewm_duration_human': humanize_ns(int(stats['predict_ewm'].get()))
+        },
+        'learn': {
+            'n_calls': int(stats['learn_mean'].n),
+            'mean_duration': int(stats['learn_mean'].get()),
+            'mean_duration_human': humanize_ns(int(stats['learn_mean'].get())),
+            'ewm_duration': int(stats['learn_ewm'].get()),
+            'ewm_duration_human': humanize_ns(int(stats['learn_ewm'].get()))
+        }
+    }

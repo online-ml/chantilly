@@ -43,6 +43,7 @@
   - [Monitoring metrics](#monitoring-metrics)
   - [Monitoring events](#monitoring-events)
   - [Visual monitoring](#visual-monitoring)
+  - [Usage statistics](#usage-statistics)
   - [Using multiple models](#using-multiple-models)
   - [Configuration handling](#configuration-handling)
   - [Using external libraries](#using-external-libraries)
@@ -277,6 +278,44 @@ A live dashboard is accessible if you navigate to [`localhost:5000`](http://loca
 </p>
 
 Under the hood the dashboard is simply listening to the API's streaming routes.
+
+### Usage statistics
+
+You can obtain some essential statistics, by querying the `@/api/stats` routes:
+
+```py
+import requests
+
+r = requests.get('http://localhost:5000/api/stats')
+print(r.json())
+```
+
+Here is an output example:
+
+```
+{
+
+    "learn": {
+        "ewm_duration": 3408682,
+        "ewm_duration_human": "3ms408μs682ns",
+        "mean_duration": 6541916,
+        "mean_duration_human": "6ms541μs916ns",
+        "n_calls": 98
+    },
+    "predict": {
+        "ewm_duration": 3190724,
+        "ewm_duration_human": "3ms190μs724ns",
+        "mean_duration": 5248635,
+        "mean_duration_human": "5ms248μs635ns",
+        "n_calls": 213
+    }
+
+}
+```
+
+The `mean_duration` fields contain the average duration of each endpoint. The `ewm_duration` fields contain an [exponential moving average](https://www.wikiwand.com/en/Moving_average#/Exponential_moving_average) of said duration, and therefore gives you an idea of the recent performance, which can allow you to detect issues. Note that these durations do not include the time it takes to transmit the response over the network.
+
+These statistic are voluntarily very plain. They're only purpose is to provide a quick healthcheck. The proper way to monitor a web application's performance, including a Flask app, is to use purpose-built tools. For instance you could use [Loki](https://github.com/grafana/loki) to monitor the application logs and [Grafana](https://grafana.com/) to visualize and analyze them.
 
 ### Using multiple models
 

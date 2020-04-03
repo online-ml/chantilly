@@ -268,3 +268,49 @@ def test_learn_model_name(client, app, regression, lin_reg):
         content_type='application/json'
     )
     assert r.status_code == 201
+
+
+def test_stats_no_flavor(client, app):
+    r = client.get('/api/stats')
+    assert r.status_code == 400
+    assert r.json == {'message': 'No flavor has been set.'}
+
+
+def test_stats(client, app, regression):
+    r = client.get('/api/stats')
+    assert r.status_code == 200
+    assert r.json == {
+        'learn': {
+            'ewm_duration': 0,
+            'ewm_duration_human': '0ns',
+            'mean_duration': 0,
+            'mean_duration_human': '0ns',
+            'n_calls': 0
+        },
+        'predict': {
+            'ewm_duration': 0,
+            'ewm_duration_human': '0ns',
+            'mean_duration': 0.0,
+            'mean_duration_human': '0ns',
+            'n_calls': 0
+        }
+    }
+
+
+def test_stats_predict(client, app, regression, lin_reg):
+    client.post('/api/predict', data=json.dumps({'features': {}}), content_type='application/json')
+    stats = client.get('/api/stats').json
+    assert stats['predict']['n_calls'] == 1
+    assert stats['predict']['mean_duration'] > 0
+    assert stats['predict']['ewm_duration'] > 0
+
+
+def test_stats_learn(client, app, regression, lin_reg):
+    client.post('/api/learn',
+        data=json.dumps({'features': {}, 'ground_truth': True}),
+        content_type='application/json'
+    )
+    stats = client.get('/api/stats').json
+    assert stats['learn']['n_calls'] == 1
+    assert stats['learn']['mean_duration'] > 0
+    assert stats['learn']['ewm_duration'] > 0
