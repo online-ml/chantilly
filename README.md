@@ -292,7 +292,7 @@ print(r.json())
 
 Here is an output example:
 
-```
+```json
 {
 
     "learn": {
