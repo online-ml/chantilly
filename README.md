@@ -70,6 +70,8 @@ Note that `chantilly` is very young, and is therefore subject to evolve. We're a
 
 ## Installation
 
+`creme` is intended to work with **Python 3.7 or above**. Installation can be done by using `pip`:
+
 ```sh
 > pip install git+https://github.com/creme-ml/chantilly
 ```
