@@ -46,7 +46,7 @@
   - [Usage statistics](#usage-statistics)
   - [Using multiple models](#using-multiple-models)
   - [Configuration handling](#configuration-handling)
-  - [Importing](#importing-libraries)
+  - [Importing libraries](#importing-libraries)
   - [Deployment](#deployment)
 - [Examples](#examples)
 - [Development](#development)
