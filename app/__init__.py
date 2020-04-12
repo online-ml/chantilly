@@ -10,6 +10,8 @@ from . import db
 from . import cli
 from . import exceptions
 
+from .__version__ import __version__
+
 
 # Make the shelve module use dill as a backend instead of the default which is pickle
 shelve.Pickler = dill.Pickler  # type: ignore
