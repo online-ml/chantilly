@@ -46,7 +46,7 @@
   - [Usage statistics](#usage-statistics)
   - [Using multiple models](#using-multiple-models)
   - [Configuration handling](#configuration-handling)
-  - [Using external libraries](#using-external-libraries)
+  - [Importing libraries](#importing-libraries)
   - [Deployment](#deployment)
 - [Examples](#examples)
 - [Development](#development)
@@ -315,7 +315,7 @@ Here is an output example:
 }
 ```
 
-The `mean_duration` fields contain the average duration of each endpoint. The `ewm_duration` fields contain an [exponential moving average](https://www.wikiwand.com/en/Moving_average#/Exponential_moving_average) of said duration, and therefore gives you an idea of the recent performance, which can allow you to detect issues. Note that these durations do not include the time it takes to transmit the response over the network.
+The `mean_duration` fields contain the average duration of each endpoint. The `ewm_duration` fields contain an [exponential moving average](https://www.wikiwand.com/en/Moving_average#/Exponential_moving_average) of said duration, and therefore gives you an idea of the recent performance, which can allow you to detect arising performance issues. Note that these durations do not include the time it takes to transmit the response over the network. These durations only pertain to the processing time on `chantilly`'s side, including but not limited to calls to the model. 
 
 These statistic are voluntarily very plain. Their only purpose is to provide a quick healthcheck. The proper way to monitor a web application's performance, including a Flask app, is to use purpose-built tools. For instance you could use [Loki](https://github.com/grafana/loki) to monitor the application logs and [Grafana](https://grafana.com/) to visualize and analyze them.
 
@@ -411,7 +411,7 @@ SECRET_KEY = 'keep_it_secret_keep_it_safe'
 SHELVE_PATH = '/usr/local/chantilly'
 ```
 
-### Using external libraries
+### Importing libraries
 
 It's highly likely that your model will be using external dependencies. A prime example is the [`datetime`](https://docs.python.org/3/library/datetime.html) module, which you'll probably want to use to parse datetime strings. Instead of specifying which libraries you want `chantilly` to import, the current practice is to import your requirements *within* your model. For instance, here is an excerpt taken from the [New-York city taxi trips example](examples/taxis):
 
