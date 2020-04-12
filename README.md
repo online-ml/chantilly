@@ -57,7 +57,7 @@
 
 ## Introduction
 
-There are many tools for deploying machine learning models. However, none of them support online models that can learn on the fly, but `chantilly` does.
+There are many tools for deploying machine learning models. However, none of them support **online models that can learn on the fly**, but `chantilly` does.
 
 Here are some advantages:
 
