@@ -1,5 +1,3 @@
-dist: xenial
-os: linux
 language: python
 
 python:
