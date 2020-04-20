@@ -16,9 +16,9 @@
     <img src="https://img.shields.io/gitter/room/creme-ml/community?color=blueviolet&style=flat-square" alt="gitter">
   </a>
   <!-- PyPI -->
-  <!-- <a href="https://pypi.org/project/chantilly">
+  <a href="https://pypi.org/project/chantilly">
     <img src="https://img.shields.io/pypi/v/chantilly.svg?label=release&color=blue&style=flat-square" alt="pypi">
-  </a> -->
+  </a>
   <!-- License -->
   <a href="https://opensource.org/licenses/BSD-3-Clause">
     <img src="https://img.shields.io/badge/License-BSD%203--Clause-blue.svg?style=flat-square" alt="bsd_3_license">
@@ -315,7 +315,7 @@ Here is an output example:
 }
 ```
 
-The `mean_duration` fields contain the average duration of each endpoint. The `ewm_duration` fields contain an [exponential moving average](https://www.wikiwand.com/en/Moving_average#/Exponential_moving_average) of said duration, and therefore gives you an idea of the recent performance, which can allow you to detect arising performance issues. Note that these durations do not include the time it takes to transmit the response over the network. These durations only pertain to the processing time on `chantilly`'s side, including but not limited to calls to the model. 
+The `mean_duration` fields contain the average duration of each endpoint. The `ewm_duration` fields contain an [exponential moving average](https://www.wikiwand.com/en/Moving_average#/Exponential_moving_average) of said duration, and therefore gives you an idea of the recent performance, which can allow you to detect arising performance issues. Note that these durations do not include the time it takes to transmit the response over the network. These durations only pertain to the processing time on `chantilly`'s side, including but not limited to calls to the model.
 
 These statistic are voluntarily very plain. Their only purpose is to provide a quick healthcheck. The proper way to monitor a web application's performance, including a Flask app, is to use purpose-built tools. For instance you could use [Loki](https://github.com/grafana/loki) to monitor the application logs and [Grafana](https://grafana.com/) to visualize and analyze them.
 
