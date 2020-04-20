@@ -1,3 +1,5 @@
+dist: xenial
+os: linux
 language: python
 
 python:
@@ -22,9 +24,11 @@ jobs:
     env: &pypi-env
       - CIBW_BUILD="cp37-* cp38-*"
     install: &pypi-install
-      - pip install cibuildwheel twine
+      - python3 -m pip install cibuildwheel==1.3.0 twine
     script: &pypi-script
-      - cibuildwheel --output-dir dist
+      - python3 -m cibuildwheel --print-build-identifiers
+      - python3 -m cibuildwheel --output-dir dist
+      - ls dist
       - if [ "$TRAVIS_OS_NAME" = "linux" ]; then python setup.py sdist ; fi
       - ls dist
       - twine upload dist/* -u ${PYPI_USER} -p ${PYPI_PASSWORD}
