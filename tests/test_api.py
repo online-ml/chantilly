@@ -314,3 +314,13 @@ def test_stats_learn(client, app, regression, lin_reg):
     assert stats['learn']['n_calls'] == 1
     assert stats['learn']['mean_duration'] > 0
     assert stats['learn']['ewm_duration'] > 0
+
+
+def test_metrics_no_flavor(client, app):
+    r = client.get('/api/metrics')
+    assert r.json == {'message': 'No flavor has been set.'}
+
+
+def test_metrics_with_flavor(client, app, regression):
+    r = client.get('/api/metrics')
+    assert len(r.json) > 0

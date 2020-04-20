@@ -20,15 +20,15 @@ class InvalidUsage(Exception):
 class UnknownFlavor(Exception):
 
     def __init__(self, *args, **kwargs):
-        msg = (
+        message = (
             'Allowed flavors are ' +
             ', '.join([f"'{flavor}'" for flavor in flavors.allowed_flavors()]) +
             '.'
         )
-        super().__init__(msg, *args, **kwargs)
+        super().__init__(message, *args, **kwargs)
 
 
-class FlavorNotSet(Exception):
+class FlavorNotSet(InvalidUsage):
 
     def __init__(self, *args, **kwargs):
-        super().__init__('No flavor has been set.', *args, **kwargs)
+        super().__init__(message='No flavor has been set.', *args, **kwargs)

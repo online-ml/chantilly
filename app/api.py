@@ -91,7 +91,8 @@ def init():
         try:
             flavor = shelf['flavor']
         except KeyError:
-            raise exceptions.InvalidUsage(message='No flavor has been set.')
+            raise exceptions.FlavorNotSet
+
         return {'flavor': flavor.name}
 
     # POST: configure chantilly
@@ -134,7 +135,8 @@ def model(name=None):
         try:
             flavor = shelf['flavor']
         except KeyError:
-            raise exceptions.InvalidUsage(message='No flavor has been set.')
+            raise exceptions.FlavorNotSet
+
         ok, error = flavor.check_model(model)
         if not ok:
             raise exceptions.InvalidUsage(message=error)
@@ -177,6 +179,7 @@ def predict():
         default_model_name = shelf['default_model_name']
     except KeyError:
         raise exceptions.InvalidUsage(message='No default model has been set.')
+
     model_name = payload.get('model', default_model_name)
     try:
         model = shelf[f'models/{model_name}']
@@ -338,6 +341,11 @@ def learn():
 @bp.route('/metrics', methods=['GET'])
 def metrics():
     shelf = db.get_shelf()
+    try:
+        metrics = shelf['metrics']
+    except KeyError:
+        raise exceptions.FlavorNotSet
+
     return {metric.__class__.__name__: metric.get() for metric in shelf['metrics']}
 
 
