@@ -19,37 +19,10 @@ jobs:
   include:
 
   - stage: pypi
-    services:
-      - docker
-    env: &pypi-env
-      - CIBW_BUILD="cp37-* cp38-*"
-    install: &pypi-install
-      - python3 -m pip install cibuildwheel==1.3.0 twine
-    script: &pypi-script
-      - python3 -m cibuildwheel --print-build-identifiers
-      - python3 -m cibuildwheel --output-dir dist
-      - ls dist
-      - if [ "$TRAVIS_OS_NAME" = "linux" ]; then python setup.py sdist ; fi
+    install:
+      - pip install twine
+    script:
+      - python setup.py bdist_wheel
       - ls dist
       - twine upload dist/* -u ${PYPI_USER} -p ${PYPI_PASSWORD}
-    if: tag IS present
-
-  - stage: pypi
-    os: osx
-    language: generic
-    env: *pypi-env
-    install: *pypi-install
-    script: *pypi-script
-    if: tag IS present
-
-  - stage: pypi
-    os: windows
-    language: shell
-    env:
-      - CIBW_BUILD="cp37-* cp38-*"
-      - PATH=/c/Python36:/c/Python36/Scripts:$PATH
-    before_install:
-      - choco install python3 --version 3.6.8 --no-progress -y
-    install: *pypi-install
-    script: *pypi-script
     if: tag IS present
