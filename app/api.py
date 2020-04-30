@@ -64,8 +64,8 @@ def after_request_func(response):
         return response
 
     duration = time.perf_counter_ns() - flask.request.started_at
-    shelf = storage.get_shelf()
-    stats = shelf['stats']
+    db = storage.get_db()
+    stats = db['stats']
 
     if flask.request.endpoint == 'api.learn':
         stats['learn_mean'].update(duration)
@@ -74,7 +74,7 @@ def after_request_func(response):
         stats['predict_mean'].update(duration)
         stats['predict_ewm'].update(duration)
 
-    shelf['stats'] = stats
+    db['stats'] = stats
     return response
 
 
@@ -87,9 +87,9 @@ def init():
 
     # GET: return the current configuration
     if flask.request.method == 'GET':
-        shelf = storage.get_shelf()
+        db = storage.get_db()
         try:
-            flavor = shelf['flavor']
+            flavor = db['flavor']
         except KeyError:
             raise exceptions.FlavorNotSet
 
@@ -117,14 +117,14 @@ def init():
 @bp.route('/model/<name>', methods=['GET', 'POST', 'DELETE'])
 def model(name=None):
 
-    shelf = storage.get_shelf()
+    db = storage.get_db()
 
     # DELETE: drop the model
     if flask.request.method == 'DELETE':
         key = f'models/{name}'
-        if key not in shelf:
+        if key not in db:
             return {}, 404
-        del shelf[key]
+        del db[key]
         return {}, 204
 
     # POST: set the model
@@ -133,7 +133,7 @@ def model(name=None):
 
         # Validate the model
         try:
-            flavor = shelf['flavor']
+            flavor = db['flavor']
         except KeyError:
             raise exceptions.FlavorNotSet
 
@@ -141,20 +141,20 @@ def model(name=None):
         if not ok:
             raise exceptions.InvalidUsage(message=error)
         name = storage.add_model(model, name=name)
-        shelf['default_model_name'] = name  # the most recent model becomes the default
+        db['default_model_name'] = name  # the most recent model becomes the default
         return {'name': name}, 201
 
     # GET: return the current model
-    name = shelf['default_model_name'] if name is None else name
-    model = shelf[f'models/{name}']
+    name = db['default_model_name'] if name is None else name
+    model = db[f'models/{name}']
     return dill.dumps(model)
 
 
 @bp.route('/models', methods=['GET'])
 def models():
-    shelf = storage.get_shelf()
-    model_names = [k.split('/', 1)[1] for k in shelf if k.startswith('models/')]
-    return {'models': model_names, 'default': shelf.get('default_model_name')}, 200
+    db = storage.get_db()
+    model_names = [k.split('/', 1)[1] for k in db if k.startswith('models/')]
+    return {'models': model_names, 'default': db.get('default_model_name')}, 200
 
 
 class PredictSchema(mm.Schema):
@@ -174,15 +174,15 @@ def predict():
         raise exceptions.InvalidUsage(message=err.normalized_messages())
 
     # Load the model
-    shelf = storage.get_shelf()
+    db = storage.get_db()
     try:
-        default_model_name = shelf['default_model_name']
+        default_model_name = db['default_model_name']
     except KeyError:
         raise exceptions.InvalidUsage(message='No default model has been set.')
 
     model_name = payload.get('model', default_model_name)
     try:
-        model = shelf[f'models/{model_name}']
+        model = db[f'models/{model_name}']
     except KeyError:
         raise exceptions.InvalidUsage(message=f"No model named '{model_name}'.")
 
@@ -191,7 +191,7 @@ def predict():
     features = copy.deepcopy(payload['features'])
 
     # Make the prediction
-    flavor = shelf['flavor']
+    flavor = db['flavor']
     pred_func = getattr(model, flavor.pred_func)
     try:
         pred = pred_func(x=features)
@@ -200,7 +200,7 @@ def predict():
 
     # The unsupervised parts of the model might be updated after a prediction, so we need to store
     # it
-    shelf[f'models/{model_name}'] = model
+    db[f'models/{model_name}'] = model
 
     # Announce the prediction
     if EVENTS_ANNOUNCER.listeners:
@@ -217,7 +217,7 @@ def predict():
     # further down the line.
     status_code = 200
     if 'id' in payload:
-        shelf['#%s' % payload['id']] = {
+        db['#%s' % payload['id']] = {
             'model': model_name,
             'features': payload['features'],
             'prediction': pred
@@ -250,9 +250,9 @@ def learn():
     prediction = payload.get('prediction')
 
     # If an ID is given, then retrieve the stored info.
-    shelf = storage.get_shelf()
+    db = storage.get_db()
     try:
-        memory = shelf['#%s' % payload['id']] if 'id' in payload else {}
+        memory = db['#%s' % payload['id']] if 'id' in payload else {}
     except KeyError:
         raise exceptions.InvalidUsage(message=f"No information stored for ID '{payload['id']}'.")
     model_name = memory.get('model', model_name)
@@ -266,18 +266,18 @@ def learn():
     # Load the model
     if model_name is None:
         try:
-            default_model_name = shelf['default_model_name']
+            default_model_name = db['default_model_name']
         except KeyError:
             raise exceptions.InvalidUsage(message='No default model has been set.')
         model_name = default_model_name
     try:
-        model = shelf[f'models/{model_name}']
+        model = db[f'models/{model_name}']
     except KeyError:
         raise exceptions.InvalidUsage(message=f"No model named '{model_name}'.")
 
     # Obtain a prediction if none was made earlier
     if prediction is None:
-        flavor = shelf['flavor']
+        flavor = db['flavor']
         pred_func = getattr(model, flavor.pred_func)
         try:
             prediction = pred_func(x=copy.deepcopy(features))
@@ -285,7 +285,7 @@ def learn():
             raise exceptions.InvalidUsage(message=str(e))
 
     # Update the metrics
-    metrics = shelf['metrics']
+    metrics = db['metrics']
     for metric in metrics:
         # If the metrics requires labels but the prediction is a dict, then we need to retrieve the
         # predicted label with the highest probability
@@ -302,14 +302,14 @@ def learn():
             metric.update(y_true=payload['ground_truth'], y_pred=pred)
         else:
             metric.update(y_true=payload['ground_truth'], y_pred=prediction)
-    shelf['metrics'] = metrics
+    db['metrics'] = metrics
 
     # Update the model
     try:
         model.fit_one(x=copy.deepcopy(features), y=payload['ground_truth'])
     except Exception as e:
         raise exceptions.InvalidUsage(message=str(e))
-    shelf[f'models/{model_name}'] = model
+    db[f'models/{model_name}'] = model
 
     # Announce the event
     if EVENTS_ANNOUNCER.listeners:
@@ -328,10 +328,10 @@ def learn():
         msg = json.dumps({metric.__class__.__name__: metric.get() for metric in metrics})
         METRICS_ANNOUNCER.announce(format_sse(data=msg))
 
-    # Delete the payload from the shelf
+    # Delete the payload from the db
     if 'id' in payload:
         try:
-            del shelf['#%s' % payload['id']]
+            del db['#%s' % payload['id']]
         except KeyError:
             pass
 
@@ -340,13 +340,13 @@ def learn():
 
 @bp.route('/metrics', methods=['GET'])
 def metrics():
-    shelf = storage.get_shelf()
+    db = storage.get_db()
     try:
-        metrics = shelf['metrics']
+        metrics = db['metrics']
     except KeyError:
         raise exceptions.FlavorNotSet
 
-    return {metric.__class__.__name__: metric.get() for metric in shelf['metrics']}
+    return {metric.__class__.__name__: metric.get() for metric in db['metrics']}
 
 
 @bp.route('/stream/metrics', methods=['GET'])
@@ -394,9 +394,9 @@ def humanize_ns(ns: int) -> str:
 
 @bp.route('/stats', methods=['GET'])
 def stats():
-    shelf = storage.get_shelf()
+    db = storage.get_db()
     try:
-        stats = shelf['stats']
+        stats = db['stats']
     except KeyError:
         raise exceptions.InvalidUsage(message='No flavor has been set.')
     return {

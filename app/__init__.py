@@ -2,7 +2,6 @@ import os
 import shelve
 
 import click
-import dill
 import flask
 import flask.cli
 
@@ -13,11 +12,6 @@ from . import storage
 from .__version__ import __version__
 
 
-# Make the shelve module use dill as a backend instead of the default which is pickle
-shelve.Pickler = dill.Pickler  # type: ignore
-shelve.Unpickler = dill.Unpickler  # type: ignore
-
-
 def create_app(test_config: dict = None):
 
     app = flask.Flask('chantilly', instance_relative_config=True)
@@ -25,6 +19,7 @@ def create_app(test_config: dict = None):
     # Set default configuation
     app.config.from_mapping(
         SECRET_KEY='dev',
+        STORAGE_BACKEND='shelve',
         SHELVE_PATH='chantilly'
     )
 
@@ -41,7 +36,7 @@ def create_app(test_config: dict = None):
     except OSError:
         pass
 
-    app.teardown_appcontext(storage.close_shelf)
+    app.teardown_appcontext(storage.close_db)
     app.cli.add_command(cli.init)
     app.cli.add_command(cli.add_model)
     app.cli.add_command(cli.delete_model)

@@ -48,7 +48,7 @@ def test_init(client, app):
     assert r.status_code == 201
 
     with app.app_context():
-        assert storage.get_shelf()['flavor'].name == 'regression'
+        assert storage.get_db()['flavor'].name == 'regression'
 
     assert client.get('/api/init').json == {'flavor': 'regression'}
 
@@ -94,7 +94,7 @@ def test_model_upload(client, app, regression):
 
     # Check that the model has been added to the shelf
     with app.app_context():
-        shelf = storage.get_shelf()
+        shelf = storage.get_db()
         assert isinstance(shelf['models/healthy-banana'], linear_model.LinearRegression)
         assert shelf['models/healthy-banana'].probe == probe
 
@@ -120,13 +120,13 @@ def test_delete_model(client, app, regression):
     client.post('/api/model/healthy-banana', data=pickle.dumps(model))
 
     with app.app_context():
-        assert 'models/healthy-banana' in storage.get_shelf()
+        assert 'models/healthy-banana' in storage.get_db()
 
     # Delete it
     client.delete('/api/model/healthy-banana')
 
     with app.app_context():
-        assert 'models/healthy-banana' not in storage.get_shelf()
+        assert 'models/healthy-banana' not in storage.get_db()
 
 
 def test_models(client, app, regression):
@@ -182,7 +182,7 @@ def test_predict_with_id(client, app, regression, lin_reg):
     assert r.json == {'model': 'lin-reg', 'prediction': 0}
 
     with app.app_context():
-        shelf = storage.get_shelf()
+        shelf = storage.get_db()
         assert '#90210' in shelf
 
 
@@ -236,7 +236,7 @@ def test_learn_with_id(client, app, regression, lin_reg):
 
     # Check the sample has been stored
     with app.app_context():
-        shelf = storage.get_shelf()
+        shelf = storage.get_db()
         assert sorted(shelf['#42'].keys()) == ['features', 'model', 'prediction']
         assert shelf['#42']['features'] == {'x': 1}
 
@@ -248,7 +248,7 @@ def test_learn_with_id(client, app, regression, lin_reg):
 
     # Check the sample has now been removed
     with app.app_context():
-        shelf = storage.get_shelf()
+        shelf = storage.get_db()
         assert '#42' not in shelf
 
 

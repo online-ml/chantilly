@@ -24,9 +24,9 @@ def test_add_model(app):
 
     # Check that the model has been added to the shelf
     with app.app_context():
-        shelf = storage.get_shelf()
-        assert isinstance(shelf['models/banana'], linear_model.LinearRegression)
-        assert shelf['models/banana'].probe == probe
+        db = storage.get_db()
+        assert isinstance(db['models/banana'], linear_model.LinearRegression)
+        assert db['models/banana'].probe == probe
 
     # Delete the pickle
     os.remove('tmp.pkl')

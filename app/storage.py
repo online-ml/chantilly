@@ -1,3 +1,4 @@
+import abc
 import contextlib
 import os
 import random
@@ -13,44 +14,44 @@ from . import exceptions
 from . import flavors
 
 
-# class StorageBackend(abc.ABC):
-#     """Abstract storage backend.
+class StorageBackend(abc.ABC):
+    """Abstract storage backend.
 
-#     This interface defines a set of methods to implement in order for a database to be used as a
-#     storage backend. This allows using different databases in a homogeneous manner by proving a
-#     single interface.
+    This interface defines a set of methods to implement in order for a database to be used as a
+    storage backend. This allows using different databases in a homogeneous manner by proving a
+    single interface.
 
-#     """
+    """
 
-#     @abc.abstractmethod
-#     def __setitem__(self, key, obj):
-#         """Store an object."""
+    @abc.abstractmethod
+    def __setitem__(self, key, obj):
+        """Store an object."""
 
-#     @abc.abstractmethod
-#     def __getitem__(self, key):
-#         """Retrieve an object."""
+    @abc.abstractmethod
+    def __getitem__(self, key):
+        """Retrieve an object."""
 
-#     @abc.abstractmethod
-#     def __delitem__(self, key):
-#         """Remove an object from storage."""
+    @abc.abstractmethod
+    def __delitem__(self, key):
+        """Remove an object from storage."""
 
-#     @abc.abstractmethod
-#     def __iter__(self):
-#         """Iterate over the keys."""
+    @abc.abstractmethod
+    def __iter__(self):
+        """Iterate over the keys."""
 
-#     @abc.abstractmethod
-#     def close(self):
-#         """Do something when the app shuts down."""
+    @abc.abstractmethod
+    def close(self):
+        """Do something when the app shuts down."""
 
-#     @abc.abstractmethod
-#     def __del__(self):
-#         """Delete everything."""
+    @abc.abstractmethod
+    def __del__(self):
+        """Delete everything."""
 
-#     def get(self, key, default=None):
-#         try:
-#             return self[key]
-#         except KeyError:
-#             return default
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
 
 
 # class ShelveBackend(StorageBackend):
@@ -84,24 +85,35 @@ from . import flavors
 #             os.remove(f'{self.path}.db')
 
 
-def get_shelf() -> shelve.Shelf:
-    if 'shelf' not in flask.g:
-        flask.g.shelf = shelve.open(flask.current_app.config['SHELVE_PATH'])
-    return flask.g.shelf
+def get_db() -> StorageBackend:
+    if 'db' not in flask.g:
+
+        backend = flask.current_app.config['STORAGE_BACKEND']
+
+        if backend == 'shelve':
+            flask.g.db = shelve.open(flask.current_app.config['SHELVE_PATH'])
+        else:
+            raise ValueError(f'Unknown storage backend: {backend}')
+
+    return flask.g.db
 
 
-def close_shelf(e=None):
-    shelf = flask.g.pop('shelf', None)
+def close_db(e=None):
+    db = flask.g.pop('db', None)
 
-    if shelf is not None:
-        shelf.close()
+    if db is not None:
+        db.close()
 
 
 def drop_db():
+    """This function's responsability is to wipe out a database."""
 
-    # Delete the current shelf if it exists
-    with contextlib.suppress(FileNotFoundError):
-        os.remove(f"{flask.current_app.config['SHELVE_PATH']}.db")
+    backend = flask.current_app.config['STORAGE_BACKEND']
+
+    if backend == 'shelve':
+        path = flask.current_app.config['SHELVE_PATH']
+        with contextlib.suppress(FileNotFoundError):
+            os.remove(f'{path}.db')
 
 
 def set_flavor(flavor: str):
@@ -113,16 +125,16 @@ def set_flavor(flavor: str):
     except KeyError:
         raise exceptions.UnknownFlavor
 
-    shelf = get_shelf()
-    shelf['flavor'] = flavor
+    db = get_db()
+    db['flavor'] = flavor
 
     init_metrics()
     init_stats()
 
 
 def init_stats():
-    shelf = get_shelf()
-    shelf['stats'] = {
+    db = get_db()
+    db['stats'] = {
         'learn_mean': creme.stats.Mean(),
         'learn_ewm': creme.stats.EWMean(.3),
         'predict_mean': creme.stats.Mean(),
@@ -131,34 +143,34 @@ def init_stats():
 
 def init_metrics():
 
-    shelf = get_shelf()
+    db = get_db()
     try:
-        flavor = shelf['flavor']
+        flavor = db['flavor']
     except KeyError:
         raise exceptions.FlavorNotSet
 
-    shelf['metrics'] = flavor.default_metrics()
+    db['metrics'] = flavor.default_metrics()
 
 
 def add_model(model: creme.base.Estimator, name: str = None) -> str:
 
-    shelf = get_shelf()
+    db = get_db()
 
     # Pick a name if none is given
     if name is None:
         while True:
             name = _random_slug()
-            if f'models/{name}' not in shelf:
+            if f'models/{name}' not in db:
                 break
 
-    shelf[f'models/{name}'] = model
+    db[f'models/{name}'] = model
 
     return name
 
 
 def delete_model(name: str):
-    shelf = get_shelf()
-    del shelf['models/{name}']
+    db = get_db()
+    del db['models/{name}']
 
 
 def _random_slug(rng=random) -> str:
