@@ -55,7 +55,7 @@ class StorageBackend(abc.ABC):
             return default
 
 
-class ShelveBackend(shelve.DbfilenameShelf, StorageBackend):
+class ShelveBackend(shelve.DbfilenameShelf, StorageBackend):  # type: ignore
     """Storage backend based on the shelve module from the standard library.
 
     This should mainly be used for development and testing, but not production.
