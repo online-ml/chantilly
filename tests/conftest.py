@@ -5,13 +5,43 @@ from app import create_app
 from app import storage
 
 
-@pytest.fixture
-def app():
+def pytest_addoption(parser):
+    parser.addoption('--redis', action='store_true', help='run with redis')
 
-    app = create_app({
-        'TESTING': True,
-        'SHELVE_PATH': str(uuid.uuid4())
-    })
+
+def pytest_generate_tests(metafunc):
+
+    backends = ['shelve']
+
+    if metafunc.config.getoption('redis'):
+        backends.append('redis')
+
+    if 'app' in metafunc.fixturenames:
+        metafunc.parametrize('app', backends, indirect=True)
+
+
+@pytest.fixture
+def app(request):
+
+    if request.param == 'shelve':
+        config = {
+            'TESTING': True,
+            'SHELVE_PATH': str(uuid.uuid4())
+        }
+    elif request.param == 'redis':
+        config = {
+            'SECRET_KEY': 'dev',
+            'STORAGE_BACKEND': 'redis',
+            'REDIS_HOST': 'localhost'
+        }
+
+    app = create_app(config)
+
+    # app.create_app({
+    #     'SECRET_KEY': 'dev',
+    #     'STORAGE_BACKEND': 'redis',
+    #     'REDIS_HOST': 'localhost'
+    # })
 
     yield app
 

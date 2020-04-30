@@ -54,6 +54,7 @@ setup(
         'marshmallow>=3.5.1'
     ],
     extras_require={
+        'redis': ['redis>=3.5'],
         'dev': [
             'flake8>=3.7.9',
             'mypy>=0.770',

@@ -46,6 +46,8 @@
   - [Usage statistics](#usage-statistics)
   - [Using multiple models](#using-multiple-models)
   - [Configuration handling](#configuration-handling)
+  - [Using a different storage backend](#using-a-different-storage-backend)
+    - [Redis](#redis)
   - [Importing libraries](#importing-libraries)
   - [Deployment](#deployment)
 - [Examples](#examples)
@@ -411,6 +413,23 @@ SECRET_KEY = 'keep_it_secret_keep_it_safe'
 SHELVE_PATH = '/usr/local/chantilly'
 ```
 
+### Using a different storage backend
+
+Currently, the default storage backend is based on the [shelve](https://docs.python.org/3/library/shelve.html) module. It's possible to use a different backend by setting the `STORAGE_BACKEND` environment variable.
+
+#### Redis
+
+Add the following to your `instance/config.py` file:
+
+```py
+STORAGE_BACKEND = 'redis'
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
+REDIS_DB = 0
+```
+
+Naturally, the values have to be chosen according to your Redis setup.
+
 ### Importing libraries
 
 It's highly likely that your model will be using external dependencies. A prime example is the [`datetime`](https://docs.python.org/3/library/datetime.html) module, which you'll probably want to use to parse datetime strings. Instead of specifying which libraries you want `chantilly` to import, the current practice is to import your requirements *within* your model. For instance, here is an excerpt taken from the [New-York city taxi trips example](examples/taxis):
@@ -456,7 +475,29 @@ Essentially, `chantilly` is just a Flask application. Therefore, it allows the s
 > cd chantilly
 > pip install -e ".[dev]"
 > python setup.py develop
-> make test
+```
+
+There are some extra dependencies that can be installed if necessary.
+
+```sh
+> pip install -e ".[dev,redis]"
+```
+
+You can then run tests.
+
+```sh
+> pytest
+```
+
+The default testing backend used the [shelve](https://docs.python.org/3/library/shelve.html) module; you can also use redis:
+
+```sh
+> pytest --redis
+```
+
+You may also run the app in development mode.
+
+```sh
 > export FLASK_ENV=development
 > chantilly run
 ```

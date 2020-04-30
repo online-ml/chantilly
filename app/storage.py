@@ -8,7 +8,12 @@ import creme.base
 import creme.metrics
 import creme.stats
 import creme.utils
+import dill
 import flask
+try:
+    import redis
+except ImportError:
+    pass
 
 from . import exceptions
 from . import flavors
@@ -50,12 +55,34 @@ class StorageBackend(abc.ABC):
             return default
 
 
-class ShelveBackend(shelve.DbfilenameShelf):
+class ShelveBackend(shelve.DbfilenameShelf, StorageBackend):
     """Storage backend based on the shelve module from the standard library.
 
     This should mainly be used for development and testing, but not production.
 
     """
+
+
+class RedisBackend(StorageBackend):
+
+    def __init__(self, host, port, db):
+        self.r = redis.Redis(host='localhost', port=6379, db=0)
+
+    def __setitem__(self, key, obj):
+        self.r[key] = dill.dumps(obj)
+
+    def __getitem__(self, key):
+        return dill.loads(self.r[key])
+
+    def __delitem__(self, key):
+        self.r.delete(key)
+
+    def __iter__(self):
+        for key in self.r.scan_iter():
+            yield key.decode()
+
+    def close(self):
+        return
 
 
 # The following will make it so that shelve.open returns ShelveBackend instead of DbfilenameShelf
@@ -69,6 +96,14 @@ def get_db() -> StorageBackend:
 
         if backend == 'shelve':
             flask.g.db = shelve.open(flask.current_app.config['SHELVE_PATH'])
+
+        elif backend == 'redis':
+            flask.g.db = RedisBackend(
+                host=flask.current_app.config['REDIS_HOST'],
+                port=flask.current_app.config.get('REDIS_PORT', 6379),
+                db=flask.current_app.config.get('REDIS_DB', 0)
+            )
+
         else:
             raise ValueError(f'Unknown storage backend: {backend}')
 
@@ -83,7 +118,12 @@ def close_db(e=None):
 
 
 def drop_db():
-    """This function's responsability is to wipe out a database."""
+    """This function's responsability is to wipe out a database.
+
+    This could be implement within each StorageBackend, it's just a bit more akward because at this
+    point the database connection is not stored in the app anymore.
+
+    """
 
     backend = flask.current_app.config['STORAGE_BACKEND']
 
@@ -91,6 +131,14 @@ def drop_db():
         path = flask.current_app.config['SHELVE_PATH']
         with contextlib.suppress(FileNotFoundError):
             os.remove(f'{path}.db')
+
+    elif backend == 'redis':
+        r = redis.Redis(
+            host=flask.current_app.config['REDIS_HOST'],
+            port=flask.current_app.config.get('REDIS_PORT', 6379),
+            db=flask.current_app.config.get('REDIS_DB', 0)
+        )
+        r.flushdb()
 
 
 def set_flavor(flavor: str):
