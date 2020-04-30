@@ -13,6 +13,77 @@ from . import exceptions
 from . import flavors
 
 
+# class StorageBackend(abc.ABC):
+#     """Abstract storage backend.
+
+#     This interface defines a set of methods to implement in order for a database to be used as a
+#     storage backend. This allows using different databases in a homogeneous manner by proving a
+#     single interface.
+
+#     """
+
+#     @abc.abstractmethod
+#     def __setitem__(self, key, obj):
+#         """Store an object."""
+
+#     @abc.abstractmethod
+#     def __getitem__(self, key):
+#         """Retrieve an object."""
+
+#     @abc.abstractmethod
+#     def __delitem__(self, key):
+#         """Remove an object from storage."""
+
+#     @abc.abstractmethod
+#     def __iter__(self):
+#         """Iterate over the keys."""
+
+#     @abc.abstractmethod
+#     def close(self):
+#         """Do something when the app shuts down."""
+
+#     @abc.abstractmethod
+#     def __del__(self):
+#         """Delete everything."""
+
+#     def get(self, key, default=None):
+#         try:
+#             return self[key]
+#         except KeyError:
+#             return default
+
+
+# class ShelveBackend(StorageBackend):
+#     """Storage backend based on the shelve module from the standard library.
+
+#     This should mainly be used for development and testing, but not production.
+
+#     """
+
+#     def __init__(self, path):
+#         self.path = path
+#         self.shelf = shelve.open(path)
+
+#     def __setitem__(self, key, obj):
+#         self.shelf[key] = obj
+
+#     def __getitem__(self, key):
+#         return self.shelf[key]
+
+#     def __delitem__(self, key):
+#         del self.shelf[key]
+
+#     def __iter__(self):
+#         return iter(self.shelf)
+
+#     def close(self):
+#         self.shelf.close()
+
+#     def __del__(self):
+#         with contextlib.suppress(FileNotFoundError):
+#             os.remove(f'{self.path}.db')
+
+
 def get_shelf() -> shelve.Shelf:
     if 'shelf' not in flask.g:
         flask.g.shelf = shelve.open(flask.current_app.config['SHELVE_PATH'])

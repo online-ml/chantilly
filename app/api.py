@@ -8,8 +8,8 @@ import dill
 import flask
 import marshmallow as mm
 
-from . import db
 from . import exceptions
+from . import storage
 
 
 bp = flask.Blueprint('api', __name__, url_prefix='/api')
@@ -64,7 +64,7 @@ def after_request_func(response):
         return response
 
     duration = time.perf_counter_ns() - flask.request.started_at
-    shelf = db.get_shelf()
+    shelf = storage.get_shelf()
     stats = shelf['stats']
 
     if flask.request.endpoint == 'api.learn':
@@ -87,7 +87,7 @@ def init():
 
     # GET: return the current configuration
     if flask.request.method == 'GET':
-        shelf = db.get_shelf()
+        shelf = storage.get_shelf()
         try:
             flavor = shelf['flavor']
         except KeyError:
@@ -106,7 +106,7 @@ def init():
 
     # Set the flavor
     try:
-        db.set_flavor(flavor=payload['flavor'])
+        storage.set_flavor(flavor=payload['flavor'])
     except exceptions.UnknownFlavor as err:
         raise exceptions.InvalidUsage(message=str(err))
 
@@ -117,7 +117,7 @@ def init():
 @bp.route('/model/<name>', methods=['GET', 'POST', 'DELETE'])
 def model(name=None):
 
-    shelf = db.get_shelf()
+    shelf = storage.get_shelf()
 
     # DELETE: drop the model
     if flask.request.method == 'DELETE':
@@ -140,7 +140,7 @@ def model(name=None):
         ok, error = flavor.check_model(model)
         if not ok:
             raise exceptions.InvalidUsage(message=error)
-        name = db.add_model(model, name=name)
+        name = storage.add_model(model, name=name)
         shelf['default_model_name'] = name  # the most recent model becomes the default
         return {'name': name}, 201
 
@@ -152,7 +152,7 @@ def model(name=None):
 
 @bp.route('/models', methods=['GET'])
 def models():
-    shelf = db.get_shelf()
+    shelf = storage.get_shelf()
     model_names = [k.split('/', 1)[1] for k in shelf if k.startswith('models/')]
     return {'models': model_names, 'default': shelf.get('default_model_name')}, 200
 
@@ -174,7 +174,7 @@ def predict():
         raise exceptions.InvalidUsage(message=err.normalized_messages())
 
     # Load the model
-    shelf = db.get_shelf()
+    shelf = storage.get_shelf()
     try:
         default_model_name = shelf['default_model_name']
     except KeyError:
@@ -250,7 +250,7 @@ def learn():
     prediction = payload.get('prediction')
 
     # If an ID is given, then retrieve the stored info.
-    shelf = db.get_shelf()
+    shelf = storage.get_shelf()
     try:
         memory = shelf['#%s' % payload['id']] if 'id' in payload else {}
     except KeyError:
@@ -340,7 +340,7 @@ def learn():
 
 @bp.route('/metrics', methods=['GET'])
 def metrics():
-    shelf = db.get_shelf()
+    shelf = storage.get_shelf()
     try:
         metrics = shelf['metrics']
     except KeyError:
@@ -394,7 +394,7 @@ def humanize_ns(ns: int) -> str:
 
 @bp.route('/stats', methods=['GET'])
 def stats():
-    shelf = db.get_shelf()
+    shelf = storage.get_shelf()
     try:
         stats = shelf['stats']
     except KeyError:

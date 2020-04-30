@@ -2,7 +2,7 @@ import click
 import dill
 import flask
 
-from . import db
+from . import storage
 
 
 @click.command('init', short_help='set the flavor')
@@ -14,7 +14,7 @@ def init(flavor):
     Calling this will reset the stored metrics.
 
     """
-    db.set_flavor(flavor)
+    storage.set_flavor(flavor)
 
 
 @click.command('add-model', short_help='add a model')
@@ -27,7 +27,7 @@ def add_model(path, name):
     A default name will be picked if none is given.
 
     """
-    name = db.add_model(model=dill.load(path), name=name)
+    name = storage.add_model(model=dill.load(path), name=name)
     click.echo(f'{name} has been added')
 
 
@@ -35,5 +35,5 @@ def add_model(path, name):
 @click.argument('name', type=str)
 @flask.cli.with_appcontext
 def delete_model(name):
-    db.delete_model(name)
+    storage.delete_model(name)
     click.echo(f'{name} has been deleted')

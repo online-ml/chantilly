@@ -4,8 +4,8 @@ import uuid
 
 from creme import linear_model
 
-from app import db
 from app import cli
+from app import storage
 
 
 def test_add_model(app):
@@ -24,7 +24,7 @@ def test_add_model(app):
 
     # Check that the model has been added to the shelf
     with app.app_context():
-        shelf = db.get_shelf()
+        shelf = storage.get_shelf()
         assert isinstance(shelf['models/banana'], linear_model.LinearRegression)
         assert shelf['models/banana'].probe == probe
 

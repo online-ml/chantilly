@@ -2,7 +2,7 @@ import uuid
 import pytest
 
 from app import create_app
-from app import db
+from app import storage
 
 
 @pytest.fixture
@@ -16,7 +16,7 @@ def app():
     yield app
 
     with app.app_context():
-        db.drop_db()
+        storage.drop_db()
 
 
 @pytest.fixture
