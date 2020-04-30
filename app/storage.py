@@ -43,10 +43,6 @@ class StorageBackend(abc.ABC):
     def close(self):
         """Do something when the app shuts down."""
 
-    @abc.abstractmethod
-    def __del__(self):
-        """Delete everything."""
-
     def get(self, key, default=None):
         try:
             return self[key]
@@ -54,35 +50,15 @@ class StorageBackend(abc.ABC):
             return default
 
 
-# class ShelveBackend(StorageBackend):
-#     """Storage backend based on the shelve module from the standard library.
+class ShelveBackend(shelve.DbfilenameShelf):
+    """Storage backend based on the shelve module from the standard library.
 
-#     This should mainly be used for development and testing, but not production.
+    This should mainly be used for development and testing, but not production.
 
-#     """
+    """
 
-#     def __init__(self, path):
-#         self.path = path
-#         self.shelf = shelve.open(path)
 
-#     def __setitem__(self, key, obj):
-#         self.shelf[key] = obj
-
-#     def __getitem__(self, key):
-#         return self.shelf[key]
-
-#     def __delitem__(self, key):
-#         del self.shelf[key]
-
-#     def __iter__(self):
-#         return iter(self.shelf)
-
-#     def close(self):
-#         self.shelf.close()
-
-#     def __del__(self):
-#         with contextlib.suppress(FileNotFoundError):
-#             os.remove(f'{self.path}.db')
+shelve.DbfilenameShelf = ShelveBackend
 
 
 def get_db() -> StorageBackend:
