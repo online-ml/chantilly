@@ -2,6 +2,7 @@ import os
 import shelve
 
 import click
+import dill
 import flask
 import flask.cli
 
@@ -10,6 +11,11 @@ from . import exceptions
 from . import storage
 
 from .__version__ import __version__
+
+
+# Make the shelve module use dill as a backend instead of the default which is pickle
+shelve.Pickler = dill.Pickler  # type: ignore
+shelve.Unpickler = dill.Unpickler  # type: ignore
 
 
 def create_app(test_config: dict = None):

@@ -58,7 +58,8 @@ class ShelveBackend(shelve.DbfilenameShelf):
     """
 
 
-shelve.DbfilenameShelf = ShelveBackend
+# The following will make it so that shelve.open returns ShelveBackend instead of DbfilenameShelf
+shelve.DbfilenameShelf = ShelveBackend  # type: ignore
 
 
 def get_db() -> StorageBackend:
