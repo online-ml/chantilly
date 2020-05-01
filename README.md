@@ -388,7 +388,9 @@ requests.delete('http://localhost:5000/api/model/barney-stinson')
 
 ### Configuration handling
 
-`chantilly` follows Flask's [instance folder](https://flask.palletsprojects.com/en/1.1.x/config/#instance-folders) pattern. This means that you can configure `chantilly` via a file named `instance/config.py`. Note that the location is relative to where you are launching the `chantilly run` command from. In fact, the `instance` directory is created if it doesn't exist whenever you run `chantilly`. You can set all the [builtin variables](https://flask.palletsprojects.com/en/1.1.x/config/#builtin-configuration-values) that Flask provides. You can also set the following variables which are specific to `chantilly`:
+`chantilly` follows Flask's [instance folder](https://flask.palletsprojects.com/en/1.1.x/config/#instance-folders) pattern. This means that you can configure `chantilly` via a file named `instance/config.py`. Note that the location is relative to where you are launching the `chantilly run` command from (more information can be found [here](https://flask.palletsprojects.com/en/1.1.x/config/#instance-folders)). You can also configure `chantilly` by setting environment variables.
+
+You can set all the [builtin variables](https://flask.palletsprojects.com/en/1.1.x/config/#builtin-configuration-values) that Flask provides. You can also set the following variables which are specific to `chantilly`:
 
 - `STORAGE_BACKEND`: determines which [storage backend](#using-a-different-storage-backend) to use.
 - `SHELVE_PATH`: location of the [shelve](https://docs.python.org/3/library/shelve.html) database file. Only applies if `STORAGE_BACKEND` is set to `shelve`.

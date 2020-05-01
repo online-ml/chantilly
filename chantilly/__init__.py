@@ -29,6 +29,16 @@ def create_app(test_config: dict = None):
         SHELVE_PATH=os.path.join(app.instance_path, 'chantilly')
     )
 
+    # Read environment variables
+    config = {}
+    for var in ['STORAGE_BACKEND', 'SHELVE_PATH', 'STORAGE_BACKEND', 'REDIS_HOST', 'REDIS_PORT',
+                'REDIS_DB']:
+        try:
+            config[var] = os.environ[var]
+        except KeyError:
+            pass
+    app.config.from_mapping(config)
+
     if test_config is None:
         # Load the instance config, if it exists, when not testing
         app.config.from_pyfile('config.py', silent=True)
