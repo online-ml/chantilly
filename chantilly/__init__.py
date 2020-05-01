@@ -26,8 +26,7 @@ def create_app(test_config: dict = None):
     app.config.from_mapping(
         SECRET_KEY='dev',
         STORAGE_BACKEND='shelve',
-        SHELVE_PATH=os.path.join(app.instance_path, 'chantilly'),
-        EXPLAIN_TEMPLATE_LOADING=True
+        SHELVE_PATH=os.path.join(app.instance_path, 'chantilly')
     )
 
     if test_config is None:
