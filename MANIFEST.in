@@ -1,4 +1,4 @@
 include chantilly/*.txt
-graft static
-graft templates
+graft chantilly/static
+graft chantilly/templates
 global-exclude *.pyc
