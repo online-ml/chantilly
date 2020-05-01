@@ -72,7 +72,13 @@ Note that `chantilly` is very young, and is therefore subject to evolve. We're a
 
 ## Installation
 
-`creme` is intended to work with **Python 3.7 or above**. Installation can be done by using `pip`:
+`chantilly` is intended to work with **Python 3.7 or above**. You can install it from PyPI:
+
+```sh
+> pip install chantilly
+```
+
+You can also install the latest development version as so:
 
 ```sh
 > pip install git+https://github.com/creme-ml/chantilly
@@ -382,13 +388,15 @@ requests.delete('http://localhost:5000/api/model/barney-stinson')
 
 ### Configuration handling
 
-`chantilly` follows Flask's [instance folder](https://flask.palletsprojects.com/en/1.1.x/config/#instance-folders) pattern. This means that you can configure `chantilly` via a file named `instance/config.py`. Note that the location is relative to where you are launching the `chantilly run` command from. You can set all the [builtin variables](https://flask.palletsprojects.com/en/1.1.x/config/#builtin-configuration-values) that Flask provides. You can also set the following variables which are specific to `chantilly`:
+`chantilly` follows Flask's [instance folder](https://flask.palletsprojects.com/en/1.1.x/config/#instance-folders) pattern. This means that you can configure `chantilly` via a file named `instance/config.py`. Note that the location is relative to where you are launching the `chantilly run` command from. In fact, the `instance` directory is created if it doesn't exist whenever you run `chantilly`. You can set all the [builtin variables](https://flask.palletsprojects.com/en/1.1.x/config/#builtin-configuration-values) that Flask provides. You can also set the following variables which are specific to `chantilly`:
 
-- `SHELVE_PATH`: location of the [shelve](https://docs.python.org/3/library/shelve.html) database file.
+- `STORAGE_BACKEND`: determines which [storage backend](#using-a-different-storage-backend) to use.
+- `SHELVE_PATH`: location of the [shelve](https://docs.python.org/3/library/shelve.html) database file. Only applies if `STORAGE_BACKEND` is set to `shelve`.
+- `REDIS_HOST`: only applies if `STORAGE_BACKEND` is set to `redis`.
+- `REDIS_PORT`: only applies if `STORAGE_BACKEND` is set to `redis`.
+- `REDIS_DB`: only applies if `STORAGE_BACKEND` is set to `redis`.
 
-The `instance/config.py` is a Python file that gets executed before the app starts, therefore this is also where you can [configure logging](https://flask.palletsprojects.com/en/1.1.x/logging/).
-
-Here is an example `instance/config.py` file:
+The `instance/config.py` is a Python file that gets executed before the app starts, therefore this is also where you can [configure logging](https://flask.palletsprojects.com/en/1.1.x/logging/). Here is an example `instance/config.py` file:
 
 ```py
 from logging.config import dictConfig
@@ -489,7 +497,7 @@ You can then run tests.
 > pytest
 ```
 
-The default testing backend used the [shelve](https://docs.python.org/3/library/shelve.html) module; you can also use redis:
+The default testing environment uses the [shelve](https://docs.python.org/3/library/shelve.html) module; you can also use redis:
 
 ```sh
 > pytest --redis

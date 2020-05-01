@@ -1,2 +1,4 @@
-global-exclude *.pyc
 include app/*.txt
+graft static
+graft templates
+global-exclude *.pyc
