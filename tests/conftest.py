@@ -6,7 +6,7 @@ from app import storage
 
 
 def pytest_addoption(parser):
-    parser.addoption('--redis', action='store_true', help='run with redis')
+    parser.addoption('--redis', action='store_true', help='redis storage backend')
 
 
 def pytest_generate_tests(metafunc):
