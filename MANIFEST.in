@@ -1,4 +1,4 @@
-include app/*.txt
+include chantilly/*.txt
 graft static
 graft templates
 global-exclude *.pyc

@@ -8,7 +8,7 @@ from creme import linear_model
 from creme import preprocessing
 import flask
 
-from app import storage
+from chantilly import storage
 
 
 @pytest.fixture

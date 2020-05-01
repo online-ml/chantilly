@@ -1,8 +1,8 @@
 import uuid
 import pytest
 
-from app import create_app
-from app import storage
+from chantilly import create_app
+from chantilly import storage
 
 
 def pytest_addoption(parser):
@@ -36,12 +36,6 @@ def app(request):
         }
 
     app = create_app(config)
-
-    # app.create_app({
-    #     'SECRET_KEY': 'dev',
-    #     'STORAGE_BACKEND': 'redis',
-    #     'REDIS_HOST': 'localhost'
-    # })
 
     yield app
 

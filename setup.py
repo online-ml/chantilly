@@ -19,7 +19,7 @@ with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 
 # Load the package's __version__.py module as a dictionary.
 about = {}
-with open(os.path.join(here, 'app', '__version__.py')) as f:
+with open(os.path.join(here, 'chantilly', '__version__.py')) as f:
     exec(f.read(), about)
 
 setup(
@@ -63,8 +63,8 @@ setup(
         ]
     },
     entry_points={
-        'console_scripts': [
-            'chantilly=app:cli_hook'
-        ],
+       'console_scripts': [
+           'chantilly=chantilly:cli_hook'
+       ],
     },
 )

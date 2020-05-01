@@ -4,8 +4,8 @@ import uuid
 
 from creme import linear_model
 
-from app import cli
-from app import storage
+from chantilly import cli
+from chantilly import storage
 
 
 def test_add_model(app):
