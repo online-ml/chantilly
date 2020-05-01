@@ -93,7 +93,12 @@ def init():
         except KeyError:
             raise exceptions.FlavorNotSet
 
-        return {'flavor': flavor.name}
+        return {
+            'flavor': flavor.name,
+            'app': {
+                'storage': flask.current_app.config['STORAGE_BACKEND']
+            }
+        }
 
     # POST: configure chantilly
 

@@ -1,8 +1,8 @@
 import uuid
-import pytest
 
 from chantilly import create_app
 from chantilly import storage
+import pytest
 
 
 def pytest_addoption(parser):

@@ -50,7 +50,7 @@ def test_init(client, app):
     with app.app_context():
         assert storage.get_db()['flavor'].name == 'regression'
 
-    assert client.get('/api/init').json == {'flavor': 'regression'}
+    assert client.get('/api/init').json == {'app': {'storage': 'shelve'}, 'flavor': 'regression'}
 
 
 def test_model_no_flavor(client, app):
