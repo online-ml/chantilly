@@ -346,6 +346,7 @@ def learn():
 @bp.route('/metrics', methods=['GET'])
 def metrics():
     db = storage.get_db()
+    print('IN METRICS')
     try:
         metrics = db['metrics']
     except KeyError:

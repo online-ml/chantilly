@@ -98,6 +98,7 @@ def get_db() -> StorageBackend:
             flask.g.db = shelve.open(flask.current_app.config['SHELVE_PATH'])
 
         elif backend == 'redis':
+            print('HEYHEYHEY')
             flask.g.db = RedisBackend(
                 host='redis', # flask.current_app.config['REDIS_HOST'],
                 port=int(flask.current_app.config['REDIS_PORT']),
