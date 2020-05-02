@@ -222,7 +222,7 @@ Note that the `id` field will have precedence in case both of `id` and `features
 
 You can access the current metrics via a GET request to the `@/api/metrics` route.
 
-Additionally, you can access a stream of metric updates by using the `@/api/stream/metrics`. This is a streaming route which implements [server-sent events (SSE)](https://www.wikiwand.com/en/Server-sent_events). As such it will notify listeners every time the metrics are updates. For instance, you can use the [`sseclient`](https://github.com/btubbs/sseclient) library to monitor the metrics from a Python script:
+Additionally, you can access a stream of metric updates by using the `@/api/stream/metrics`. This is a streaming route which implements [server-sent events (SSE)](https://www.wikiwand.com/en/Server-sent_events). As such it will notify listeners every time the metrics are updates. For instance, you can use the [`sseclient`](https://github.com/btubbs/sseclient), which is a thin layer on top of [`requests`](https://requests.readthedocs.io/en/master/):
 
 ```py
 import json

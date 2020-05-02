@@ -4,8 +4,7 @@ RUN mkdir /app
 WORKDIR /app
 ADD . /app/
 RUN pip install --upgrade pip
-RUN pip install git+https://github.com/creme-ml/chantilly --upgrade
-RUN pip install gunicorn[gevent] redis
+RUN pip install chantilly[redis] gunicorn[gevent]
 
 ENV SECRET_KEY keep_it_secret_keep_it_safe
 ENV STORAGE_BACKEND redis
