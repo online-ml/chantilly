@@ -99,9 +99,9 @@ def get_db() -> StorageBackend:
 
         elif backend == 'redis':
             flask.g.db = RedisBackend(
-                host='redis', #flask.current_app.config.get('REDIS_HOST', 'localhost'),
-                port=int(flask.current_app.config.get('REDIS_PORT', 6379)),
-                db=int(flask.current_app.config.get('REDIS_DB', 0))
+                host=flask.current_app.config['REDIS_HOST'],
+                port=int(flask.current_app.config['REDIS_PORT']),
+                db=int(flask.current_app.config['REDIS_DB'])
             )
 
         else:

@@ -394,9 +394,9 @@ You can set all the [builtin variables](https://flask.palletsprojects.com/en/1.1
 
 - `STORAGE_BACKEND`: determines which [storage backend](#using-a-different-storage-backend) to use.
 - `SHELVE_PATH`: location of the [shelve](https://docs.python.org/3/library/shelve.html) database file. Only applies if `STORAGE_BACKEND` is set to `shelve`.
-- `REDIS_HOST`: only applies if `STORAGE_BACKEND` is set to `redis`.
-- `REDIS_PORT`: only applies if `STORAGE_BACKEND` is set to `redis`.
-- `REDIS_DB`: only applies if `STORAGE_BACKEND` is set to `redis`.
+- `REDIS_HOST`: required if `STORAGE_BACKEND` is set to `redis`.
+- `REDIS_PORT`: required if `STORAGE_BACKEND` is set to `redis`.
+- `REDIS_DB`: required if `STORAGE_BACKEND` is set to `redis`.
 
 The `instance/config.py` is a Python file that gets executed before the app starts, therefore this is also where you can [configure logging](https://flask.palletsprojects.com/en/1.1.x/logging/). Here is an example `instance/config.py` file:
 
