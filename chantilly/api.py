@@ -351,7 +351,7 @@ def metrics():
     except KeyError:
         raise exceptions.FlavorNotSet
 
-    return {metric.__class__.__name__: metric.get() for metric in db['metrics']}
+    return {metric.__class__.__name__: metric.get() for metric in metrics}
 
 
 @bp.route('/stream/metrics', methods=['GET'])
