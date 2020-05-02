@@ -66,7 +66,7 @@ class ShelveBackend(shelve.DbfilenameShelf, StorageBackend):  # type: ignore
 class RedisBackend(StorageBackend):
 
     def __init__(self, host, port, db):
-        self.r = redis.Redis(host='localhost', port=6379, db=0)
+        self.r = redis.Redis(host=host, port=port, db=db)
 
     def __setitem__(self, key, obj):
         self.r[key] = dill.dumps(obj)
@@ -98,7 +98,6 @@ def get_db() -> StorageBackend:
             flask.g.db = shelve.open(flask.current_app.config['SHELVE_PATH'])
 
         elif backend == 'redis':
-            print('HEYHEYHEY')
             flask.g.db = RedisBackend(
                 host='redis', # flask.current_app.config['REDIS_HOST'],
                 port=int(flask.current_app.config['REDIS_PORT']),
