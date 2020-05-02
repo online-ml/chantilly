@@ -477,6 +477,7 @@ Essentially, `chantilly` is just a Flask application. Therefore, it allows the s
 ## Examples
 
 - [New-York city taxi trips 🚕](examples/taxis)
+- [Deployment with Docker Compose 🐋](example/docker-compose)
 
 ## Development
 

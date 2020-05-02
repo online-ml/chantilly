@@ -1,0 +1,33 @@
+version: '3'
+
+services:
+
+    chantilly:
+        build: .
+        restart: always
+        ports:
+            - "5000:5000"
+        links:
+            - redis:redis
+        depends_on:
+            - redis
+
+    nginx:
+        restart: always
+        build: ./nginx/
+        ports:
+            - "80:80"
+        links:
+            - chantilly:chantilly
+
+    redis:
+        restart: always
+        image: redis:latest
+        command: ["redis-server", "--appendonly", "yes"]
+        volumes:
+            - redis-data:/data
+        expose:
+            - "6379"
+
+volumes:
+    redis-data:
