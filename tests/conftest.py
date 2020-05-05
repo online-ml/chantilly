@@ -32,7 +32,9 @@ def app(request):
         config = {
             'SECRET_KEY': 'dev',
             'STORAGE_BACKEND': 'redis',
-            'REDIS_HOST': 'localhost'
+            'REDIS_HOST': 'localhost',
+            'REDIS_PORT': 6379,
+            'REDIS_DB': 0
         }
 
     app = create_app(config)

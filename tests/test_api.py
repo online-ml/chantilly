@@ -3,6 +3,7 @@ import pickle
 import pytest
 import uuid
 
+import creme
 from creme import datasets
 from creme import linear_model
 from creme import preprocessing
@@ -50,7 +51,11 @@ def test_init(client, app):
     with app.app_context():
         assert storage.get_db()['flavor'].name == 'regression'
 
-    assert client.get('/api/init').json == {'app': {'storage': 'shelve'}, 'flavor': 'regression'}
+    assert client.get('/api/init').json == {
+        'storage': app.config['STORAGE_BACKEND'],
+        'flavor': 'regression',
+        'creme_version': creme.__version__
+    }
 
 
 def test_model_no_flavor(client, app):
@@ -136,7 +141,7 @@ def test_models(client, app, regression):
     client.post('/api/model/barney-stinson', data=pickle.dumps(model))
 
     r = client.get('/api/models')
-    assert r.json == {'default': 'barney-stinson', 'models': ['ted-mosby', 'barney-stinson']}
+    assert r.json == {'default': 'barney-stinson', 'models': ['barney-stinson', 'ted-mosby']}
 
 
 def test_predict_no_model(client, app, regression):

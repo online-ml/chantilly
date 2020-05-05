@@ -3,6 +3,7 @@ import json
 import queue
 import time
 
+import creme
 from creme.metrics.base import ClassificationMetric
 import dill
 import flask
@@ -95,9 +96,8 @@ def init():
 
         return {
             'flavor': flavor.name,
-            'app': {
-                'storage': flask.current_app.config['STORAGE_BACKEND']
-            }
+            'storage': flask.current_app.config['STORAGE_BACKEND'],
+            'creme_version': creme.__version__
         }
 
     # POST: configure chantilly
@@ -158,7 +158,7 @@ def model(name=None):
 @bp.route('/models', methods=['GET'])
 def models():
     db = storage.get_db()
-    model_names = [k.split('/', 1)[1] for k in db if k.startswith('models/')]
+    model_names = sorted([k.split('/', 1)[1] for k in db if k.startswith('models/')])
     return {'models': model_names, 'default': db.get('default_model_name')}, 200
 
 
