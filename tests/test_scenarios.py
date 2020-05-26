@@ -3,7 +3,9 @@ import math
 import pickle
 
 from creme import datasets
+from creme import feature_extraction
 from creme import linear_model
+from creme import naive_bayes
 from creme import preprocessing
 
 
@@ -65,3 +67,34 @@ def test_phishing_without_id(client, app):
 
         # Compare the predictions from both sides
         assert math.isclose(y_pred[True], r.json['prediction']['true'])
+
+
+def test_text_input(client, app):
+
+    client.post('/api/init', json={'flavor': 'binary'})
+
+    model = feature_extraction.BagOfWords() | naive_bayes.MultinomialNB()
+    client.post('/api/model', data=pickle.dumps(model))
+
+    for x, y in datasets.SMSSpam().take(20):
+
+        # Predict/learn via chantilly
+        p = client.post('/api/predict',
+            data=json.dumps({'features': x['body']}),
+            content_type='application/json'
+        )
+        print(p.json)
+        assert p.status_code == 200
+        l = client.post('/api/learn',
+            data=json.dumps({'features': x['body'], 'ground_truth': y}),
+            content_type='application/json'
+        )
+        assert l.status_code == 201
+
+         # Predict/learn directly via creme
+        y_pred = model.predict_proba_one(x['body'])
+        model.fit_one(x['body'], y)
+
+        # Compare the predictions from both sides
+        assert y_pred.get(True) == p.json['prediction'].get('true')
+        assert y_pred.get(False) == p.json['prediction'].get('false')

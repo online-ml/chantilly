@@ -3,11 +3,11 @@ import json
 import queue
 import time
 
+import cerberus
 import creme
 from creme.metrics.base import ClassificationMetric
 import dill
 import flask
-import marshmallow as mm
 
 from . import exceptions
 from . import storage
@@ -79,8 +79,9 @@ def after_request_func(response):
     return response
 
 
-class InitSchema(mm.Schema):
-    flavor = mm.fields.Str(required=True)
+InitSchema = {
+    'flavor': {'type': 'string', 'required': True},
+}
 
 
 @bp.route('/init', methods=['GET', 'POST'])
@@ -103,11 +104,11 @@ def init():
     # POST: configure chantilly
 
     # Validate the payload
-    try:
-        schema = InitSchema()
-        payload = schema.load(flask.request.json)
-    except mm.ValidationError as err:
-        raise exceptions.InvalidUsage(message=err.normalized_messages())
+    payload = flask.request.json
+    v = cerberus.Validator(InitSchema)
+    ok = v.validate(payload)
+    if not ok:
+        raise exceptions.InvalidUsage(message=v.errors)
 
     # Set the flavor
     try:
@@ -162,21 +163,22 @@ def models():
     return {'models': model_names, 'default': db.get('default_model_name')}, 200
 
 
-class PredictSchema(mm.Schema):
-    features = mm.fields.Dict(required=True)
-    id = mm.fields.Raw()  # as long as it can be coerced to a str it's okay
-    model = mm.fields.Str()
+PredictSchema = {
+    'features': {'anyof': [{'type': 'dict'}, {'type': 'string'}], 'required': True},
+    'id': {'anyof': [{'type': 'integer'}, {'type': 'string'}]},
+    'model': {'type': 'string'},
+}
 
 
 @bp.route('/predict', methods=['POST'])
 def predict():
 
     # Validate the payload
-    try:
-        schema = PredictSchema()
-        payload = schema.load(flask.request.json)
-    except mm.ValidationError as err:
-        raise exceptions.InvalidUsage(message=err.normalized_messages())
+    payload = flask.request.json
+    v = cerberus.Validator(PredictSchema)
+    ok = v.validate(payload)
+    if not ok:
+        raise exceptions.InvalidUsage(message=v.errors)
 
     # Load the model
     db = storage.get_db()
@@ -201,7 +203,7 @@ def predict():
     try:
         pred = pred_func(x=features)
     except Exception as e:
-        raise exceptions.InvalidUsage(message=str(e))
+        raise exceptions.InvalidUsage(message=repr(e))
 
     # The unsupervised parts of the model might be updated after a prediction, so we need to store
     # it
@@ -232,24 +234,25 @@ def predict():
     return {'model': model_name, 'prediction': pred}, status_code
 
 
-class LearnSchema(mm.Schema):
-    features = mm.fields.Dict()
-    id = mm.fields.Raw()
-    ground_truth = mm.fields.Raw(required=True)
-    model = mm.fields.Str()
+LearnSchema = {
+    'features': {'anyof': [{'type': 'dict'}, {'type': 'string'}]},
+    'id': {'anyof': [{'type': 'integer'}, {'type': 'string'}]},
+    'ground_truth': {'required': True},
+    'model': {'type': 'string'},
+}
 
 
 @bp.route('/learn', methods=['POST'])
 def learn():
 
     # Validate the payload
-    try:
-        schema = LearnSchema()
-        payload = schema.load(flask.request.json)
-    except mm.ValidationError as err:
-        raise exceptions.InvalidUsage(message=err.normalized_messages())
+    payload = flask.request.json
+    v = cerberus.Validator(LearnSchema)
+    ok = v.validate(payload)
+    if not ok:
+       raise exceptions.InvalidUsage(message=v.errors)
 
-    # Override with the information provided in the request
+    # Unpack the information provided in the request
     model_name = payload.get('model')
     features = payload.get('features')
     prediction = payload.get('prediction')
@@ -287,7 +290,7 @@ def learn():
         try:
             prediction = pred_func(x=copy.deepcopy(features))
         except Exception as e:
-            raise exceptions.InvalidUsage(message=str(e))
+            raise exceptions.InvalidUsage(message=repr(e))
 
     # Update the metrics
     metrics = db['metrics']
@@ -313,7 +316,7 @@ def learn():
     try:
         model.fit_one(x=copy.deepcopy(features), y=payload['ground_truth'])
     except Exception as e:
-        raise exceptions.InvalidUsage(message=str(e))
+        raise exceptions.InvalidUsage(message=repr(e))
     db[f'models/{model_name}'] = model
 
     # Announce the event

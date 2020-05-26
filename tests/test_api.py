@@ -157,7 +157,7 @@ def test_predict_no_features(client, app, regression, lin_reg):
         data=json.dumps({'id': 42}),
         content_type='application/json'
     )
-    assert r.json == {'message': {'features': ['Missing data for required field.']}}
+    assert r.json == {'message': {'features': ['required field']}}
 
 
 def test_predict_unknown_model(client, app, regression, lin_reg):
@@ -205,7 +205,7 @@ def test_learn_no_ground_truth(client, app, regression, lin_reg):
         data=json.dumps({'features': {'x': 1}}),
         content_type='application/json'
     )
-    assert r.json == {'message': {'ground_truth': ['Missing data for required field.']}}
+    assert r.json == {'message': {'ground_truth': ['required field']}}
 
 
 def test_learn_no_model(client, app, regression):

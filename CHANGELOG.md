@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## Unreleased
 
 - Sending a `GET` request to `/api/init` now returns more information, including the version of `creme` that is being used.
+- [Cerberus](https://docs.python-cerberus.org/en/stable/index.html) is used instead of [Marshmallow](https://marshmallow.readthedocs.io/en/stable/) for input validation, which slightly modifies the contents of error messages.
+- The `features` field can now contain text input. Before the only possibility was to pass a dictionary.
 
 ## [0.2.0](https://pypi.org/project/chantilly/0.2.0/) - 2020-05-02
 
