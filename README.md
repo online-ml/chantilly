@@ -268,12 +268,12 @@ In JavaScript, you can you use the [`addEventListener`](https://developer.mozill
 ```js
 var es = new EventSource('http://localhost:5000/api/stream/events');
 
-es.addEventListener('learn', = e => {
+es.addEventListener('learn', e => {
     var data = JSON.parse(e.data);
     console.log(data.model, data.features, data.prediction, data.ground_truth)
 };
 
-es.addEventListener('predict', = e => {
+es.addEventListener('predict', e => {
     var data = JSON.parse(e.data);
     console.log(data.model, data.features, data.prediction)
 };
