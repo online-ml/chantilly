@@ -1,6 +1,6 @@
-from creme import datasets
-from creme import linear_model
-from creme import preprocessing
+from river import datasets
+from river import linear_model
+from river import preprocessing
 import dill
 import requests
 

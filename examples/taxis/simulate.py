@@ -3,9 +3,9 @@ import datetime as dt
 import json
 import time
 
-from creme import datasets
-from creme import metrics
-from creme import stream
+from river import datasets
+from river import metrics
+from river import stream
 import requests
 
 

@@ -4,10 +4,10 @@ import os
 import random
 import shelve
 
-import creme.base
-import creme.metrics
-import creme.stats
-import creme.utils
+import river.base
+import river.metrics
+import river.stats
+import river.utils
 import dill
 import flask
 try:
@@ -160,10 +160,10 @@ def set_flavor(flavor: str):
 def init_stats():
     db = get_db()
     db['stats'] = {
-        'learn_mean': creme.stats.Mean(),
-        'learn_ewm': creme.stats.EWMean(.3),
-        'predict_mean': creme.stats.Mean(),
-        'predict_ewm': creme.stats.EWMean(.3),
+        'learn_mean': river.stats.Mean(),
+        'learn_ewm': river.stats.EWMean(.3),
+        'predict_mean': river.stats.Mean(),
+        'predict_ewm': river.stats.EWMean(.3),
     }
 
 def init_metrics():
@@ -177,7 +177,7 @@ def init_metrics():
     db['metrics'] = flavor.default_metrics()
 
 
-def add_model(model: creme.base.Estimator, name: str = None) -> str:
+def add_model(model: river.base.Estimator, name: str = None) -> str:
 
     db = get_db()
 

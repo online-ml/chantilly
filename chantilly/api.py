@@ -4,8 +4,8 @@ import queue
 import time
 
 import cerberus
-import creme
-from creme.metrics.base import ClassificationMetric
+import river
+from river.metrics.base import ClassificationMetric
 import dill
 import flask
 
@@ -98,7 +98,7 @@ def init():
         return {
             'flavor': flavor.name,
             'storage': flask.current_app.config['STORAGE_BACKEND'],
-            'creme_version': creme.__version__
+            'river_version': river.__version__
         }
 
     # POST: configure chantilly
@@ -314,7 +314,7 @@ def learn():
 
     # Update the model
     try:
-        model.fit_one(x=copy.deepcopy(features), y=payload['ground_truth'])
+        model.learn_one(x=copy.deepcopy(features), y=payload['ground_truth'])
     except Exception as e:
         raise exceptions.InvalidUsage(message=repr(e))
     db[f'models/{model_name}'] = model

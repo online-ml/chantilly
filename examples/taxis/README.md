@@ -14,12 +14,12 @@ Before running the simulation, let's start the `chantilly` server. For the purpo
 > chantilly run
 ```
 
-Let's now create a model using `creme`. Simply run the following snippet in a Python interpreter.
+Let's now create a model using `river`. Simply run the following snippet in a Python interpreter.
 
 ```py
-from creme import compose
-from creme import linear_model
-from creme import preprocessing
+from river import compose
+from river import linear_model
+from river import preprocessing
 
 
 def parse(trip):

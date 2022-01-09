@@ -1,7 +1,7 @@
 import abc
 import typing
 
-from creme import metrics
+from river import metrics
 
 
 def allowed_flavors():
@@ -34,7 +34,7 @@ class RegressionFlavor(Flavor):
         return 'regression'
 
     def check_model(self, model):
-        for method in ('fit_one', 'predict_one'):
+        for method in ('learn_one', 'predict_one'):
             if not hasattr(model, method):
                 return False, f'The model does not implement {method}.'
         return True, None
@@ -54,7 +54,7 @@ class BinaryFlavor(Flavor):
         return 'binary'
 
     def check_model(self, model):
-        for method in ('fit_one', 'predict_proba_one'):
+        for method in ('learn_one', 'predict_proba_one'):
             if not hasattr(model, method):
                 return False, f'The model does not implement {method}.'
         return True, None
@@ -80,7 +80,7 @@ class MultiClassFlavor(Flavor):
         return 'multiclass'
 
     def check_model(self, model):
-        for method in ('fit_one', 'predict_proba_one'):
+        for method in ('learn_one', 'predict_proba_one'):
             if not hasattr(model, method):
                 return False, f'The model does not implement {method}.'
         return True, None

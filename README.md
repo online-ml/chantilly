@@ -4,16 +4,16 @@
 
 <p align="center">
   <!-- Travis -->
-  <a href="https://travis-ci.org/creme-ml/chantilly">
-    <img src="https://img.shields.io/travis/creme-ml/chantilly/master.svg?style=flat-square" alt="travis">
+  <a href="https://travis-ci.org/online-ml/chantilly">
+    <img src="https://img.shields.io/travis/online-ml/chantilly/master.svg?style=flat-square" alt="travis">
   </a>
   <!-- Codecov -->
-  <a href="https://codecov.io/gh/creme-ml/chantilly">
-    <img src="https://img.shields.io/codecov/c/gh/creme-ml/chantilly.svg?style=flat-square" alt="codecov">
+  <a href="https://codecov.io/gh/online-ml/chantilly">
+    <img src="https://img.shields.io/codecov/c/gh/online-ml/chantilly.svg?style=flat-square" alt="codecov">
   </a>
   <!-- Gitter -->
-  <a href="https://gitter.im/creme-ml/community?utm_source=share-link&utm_medium=link&utm_campaign=share-link">
-    <img src="https://img.shields.io/gitter/room/creme-ml/community?color=blueviolet&style=flat-square" alt="gitter">
+  <a href="https://gitter.im/online-ml/community?utm_source=share-link&utm_medium=link&utm_campaign=share-link">
+    <img src="https://img.shields.io/gitter/room/online-ml/community?color=blueviolet&style=flat-square" alt="gitter">
   </a>
   <!-- PyPI -->
   <a href="https://pypi.org/project/chantilly">
@@ -26,7 +26,7 @@
 </p>
 
 <p align="center">
-  <code>chantilly</code> is a deployment tool for <a href="https://www.wikiwand.com/en/Online_machine_learning">online machine learning</a> models. It is designed to work hand in hand with <a href="https://github.com/creme-ml/creme"><code>creme</code></a>.
+  <code>chantilly</code> is a deployment tool for <a href="https://www.wikiwand.com/en/Online_machine_learning">online machine learning</a> models. It is designed to work hand in hand with <a href="https://github.com/online-ml/river"><code>river</code></a>.
 </p>
 
 ## Table of contents
@@ -81,7 +81,7 @@ Note that `chantilly` is very young, and is therefore subject to evolve. We're a
 You can also install the latest development version as so:
 
 ```sh
-> pip install git+https://github.com/creme-ml/chantilly
+> pip install git+https://github.com/online-ml/chantilly
 ```
 
 ## User guide
@@ -133,9 +133,9 @@ print(r.json()['flavor'])
 You can upload a model by sending a POST request to the `@/api/model` route. You need to provide a model which has been serialized with [`pickle`](https://docs.python.org/3/library/pickle.html) or [`dill`](https://dill.readthedocs.io/en/latest/dill.html) (we recommend the latter). For example:
 
 ```py
-from creme import compose
-from creme import linear_model
-from creme import preprocessing
+from river import compose
+from river import linear_model
+from river import preprocessing
 import dill
 import requests
 
@@ -332,7 +332,7 @@ These statistic are voluntarily very plain. Their only purpose is to provide a q
 You can use different models by giving them names. You can provide a name to a model by adding a suffix to `@/api/model`:
 
 ```py
-from creme import tree
+from river import tree
 import dill
 import requests
 
@@ -445,9 +445,9 @@ Naturally, the values have to be chosen according to your Redis setup.
 It's highly likely that your model will be using external dependencies. A prime example is the [`datetime`](https://docs.python.org/3/library/datetime.html) module, which you'll probably want to use to parse datetime strings. Instead of specifying which libraries you want `chantilly` to import, the current practice is to import your requirements *within* your model. For instance, here is an excerpt taken from the [New-York city taxi trips example](examples/taxis):
 
 ```py
-from creme import compose
-from creme import linear_model
-from creme import preprocessing
+from river import compose
+from river import linear_model
+from river import preprocessing
 
 def parse(trip):
     import datetime as dt
@@ -482,7 +482,7 @@ Essentially, `chantilly` is just a Flask application. Therefore, it allows the s
 ## Development
 
 ```sh
-> git clone https://github.com/creme-ml/chantilly
+> git clone https://github.com/online-ml/chantilly
 > cd chantilly
 > pip install -e ".[dev]"
 > python setup.py develop
@@ -515,7 +515,7 @@ You may also run the app in development mode.
 
 ## Roadmap
 
-- **HTTP long polling**: Currently, clients can interact with `creme` over a straightforward HTTP protocol. Therefore the speed bottleneck comes from the web requests, not from the machine learning. We would like to provide a way to interact with `chantilly` via long-polling. This means that a single connection can be used to process multiple predictions and model updates, which reduces the overall latency.
+- **HTTP long polling**: Currently, clients can interact with `river` over a straightforward HTTP protocol. Therefore the speed bottleneck comes from the web requests, not from the machine learning. We would like to provide a way to interact with `chantilly` via long-polling. This means that a single connection can be used to process multiple predictions and model updates, which reduces the overall latency.
 - **Scaling**: At the moment `chantilly` is designed to be run as a single server. Ideally we want to allow `chantilly` in a multi-server environment. Predictions are simple to scale because the model can be used concurrently. However, updating the model concurrently leads to [reader-write problems](https://www.wikiwand.com/en/Readers%E2%80%93writers_problem). We have some ideas in the pipe, but this is going to need some careful thinking.
 - **Grafana dashboard**: The current dashboard is a quick-and-dirty proof of concept. In the long term, we would like to provide a straighforward way to connect with a [Grafana](https://grafana.com/) instance without having to get your hands dirty. Ideally, we would like to use SQLite as a data source for simplicity reasons. However, The Grafana team [has not planned](https://github.com/grafana/grafana/issues/1542#issuecomment-425684417) to add support for SQLite. Instead, they encourage users to use [plugins](https://grafana.com/docs/grafana/latest/plugins/developing/datasources/). We might also look into [Prometheus](https://prometheus.io/) and [InfluxDB](https://www.influxdata.com/).
 - **Support more paradigms**: For the moment we cater to regression and classification models. In the future we also want to support other paradigms, such as time series forecasting and recommender systems.
@@ -536,4 +536,4 @@ Most machine learning deployment tools only support making predictions with a tr
 
 ## License
 
-`creme` is free and open-source software licensed under the [3-clause BSD license](https://github.com/creme-ml/creme/blob/master/LICENSE).
+`river` is free and open-source software licensed under the [3-clause BSD license](https://github.com/online-ml/river/blob/master/LICENSE).

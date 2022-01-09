@@ -3,10 +3,10 @@ import pickle
 import pytest
 import uuid
 
-import creme
-from creme import datasets
-from creme import linear_model
-from creme import preprocessing
+import river
+from river import datasets
+from river import linear_model
+from river import preprocessing
 import flask
 
 from chantilly import storage
@@ -54,7 +54,7 @@ def test_init(client, app):
     assert client.get('/api/init').json == {
         'storage': app.config['STORAGE_BACKEND'],
         'flavor': 'regression',
-        'creme_version': creme.__version__
+        'river_version': river.__version__
     }
 
 
@@ -72,11 +72,11 @@ class ModelWithoutFit:
 
 def test_model_without_fit(client, app, regression):
     r = client.post('/api/model', data=pickle.dumps(ModelWithoutFit()))
-    assert r.json == {'message': 'The model does not implement fit_one.'}
+    assert r.json == {'message': 'The model does not implement learn_one.'}
 
 
 class ModelWithoutPredict:
-    def fit_one(self, x, y):
+    def learn_one(self, x, y):
         return self
 
 

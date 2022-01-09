@@ -49,7 +49,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'cerberus>=1.3.2',
-        'creme>=0.5.0',
+        'river>=0.9.0',
         'dill>=0.3.1.1',
         'Flask>=1.1.1'
     ],
