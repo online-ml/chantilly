@@ -482,36 +482,46 @@ Essentially, `chantilly` is just a Flask application. Therefore, it allows the s
 ## Development
 
 ```sh
-> git clone https://github.com/online-ml/chantilly
-> cd chantilly
-> pip install -e ".[dev]"
-> python setup.py develop
+git clone https://github.com/online-ml/chantilly
+cd chantilly
+python3 -m venv env
+source env/bin/activate
+pip install -e ".[dev]"
+python setup.py develop
 ```
 
 There are some extra dependencies that can be installed if necessary.
 
 ```sh
-> pip install -e ".[dev,redis]"
+pip install -e ".[dev,redis]"
 ```
 
 You can then run tests.
 
 ```sh
-> pytest
+pytest
 ```
 
 The default testing environment uses the [shelve](https://docs.python.org/3/library/shelve.html) module; you can also use redis:
 
 ```sh
-> pytest --redis
+pytest --redis
 ```
 
 You may also run the app in development mode.
 
 ```sh
-> export FLASK_ENV=development
-> chantilly run
+export FLASK_ENV=development
+chantilly run
 ```
+
+To deploy to PyPI:
+
+1. Update `chantilly/__version__.py`
+2. `pip install twine`
+3. `python setup.py sdist`
+4. `twine check dist/*`
+5. `twine upload dist/*`
 
 ## Roadmap
 
