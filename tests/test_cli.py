@@ -2,7 +2,7 @@ import pickle
 import os
 import uuid
 
-from creme import linear_model
+from river import linear_model
 
 from chantilly import cli
 from chantilly import storage
