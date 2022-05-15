@@ -29,6 +29,8 @@
   <code>chantilly</code> is a deployment tool for <a href="https://www.wikiwand.com/en/Online_machine_learning">online machine learning</a> models. It is designed to work hand in hand with <a href="https://github.com/online-ml/river"><code>river</code></a>.
 </p>
 
+## ⚠️ Chantilly is not being worked on anymore. It's being replaced by [Beaver](https://github.com/online-ml/beaver). The codebase is now frozen.
+
 ## Table of contents
 
 - [Table of contents](#table-of-contents)
